@@ -12,19 +12,32 @@ var vertices = [
 	vec4(0.2, -0.2,  0, 1.0)
 ];
 
-// var colors = [
-//   vec4(1.0, 0.0, 0.0, 1.0),  // merah
-//   vec4(0.0, 1.0, 0.0, 1.0),  // hijau
-//   vec4(0.0, 0.0, 1.0, 1.0),  // biru
-//   vec4(1.0, 1.0, 0.0, 1.0)   // kuning
-// ];
-// var vertexColors = [];
 var color = vec4(1.0, 0.0, 0.0, 1.0);
 
 var uModelViewMatrix;
 var uProjectionMatrix;
+
 var translation = 0.0;
 var translationSpeed = 0.0;
+var translationLoc;
+
+var simulationState = "STOP";
+
+var time = 0.0;
+var deltaTime = 0.016;
+var gravity = -9.81;
+
+var boundX = 4.9;
+var boundY = 4.8;
+
+var velocityX = 2.0;
+var velocityY = 0.0;
+
+var x = 0.0
+var y = 0.0;
+
+var massa = 1;
+var mu = 0.1;
 
 init();
 
@@ -38,15 +51,9 @@ function init()
     gl.clearColor(0.8, 0.8, 0.8, 1.0);
 
     var ratio = canvas.width / canvas.height;
-    console.log(ratio);
-
-    console.log(vertices);
-
     for (var vertex of vertices) {
       vertex[0] = vertex[0] / ratio;
     }
-
-    console.log(vertices);
 
     positions.push(vertices[0]);
     positions.push(vertices[1]);
@@ -54,13 +61,6 @@ function init()
     positions.push(vertices[0]);
     positions.push(vertices[3]);
     positions.push(vertices[2]);
-
-    // vertexColors.push(colors[0]);
-    // vertexColors.push(colors[1]);
-    // vertexColors.push(colors[2]);
-    // vertexColors.push(colors[0]);
-    // vertexColors.push(colors[3]);
-    // vertexColors.push(colors[2]);
 
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
@@ -73,14 +73,6 @@ function init()
     gl.vertexAttribPointer(positionLoc, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionLoc);
 
-    // var cBuffer = gl.createBuffer();
-    // gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-    // gl.bufferData(gl.ARRAY_BUFFER, flatten(vertexColors), gl.STATIC_DRAW);
-
-    // var colorLoc = gl.getAttribLocation(program, "aColor");
-    // gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
-    // gl.enableVertexAttribArray(colorLoc);
-
     var aColor = gl.getUniformLocation(program, "aColor");
     gl.uniform4fv(aColor, color);
 
@@ -90,53 +82,79 @@ function init()
 
 	// var slider = document.getElementById("SampleSlide");
 	// slider.addEventListener("input", function() {
-	// 	translationSpeed = -parseFloat(slider.value);
+	// 	translationSpeed = parseFloat(slider.value);
 	// });
+
+    var startButton = document.getElementById("start-button");
+    startButton.addEventListener("click", function() {
+        simulationState = "START";
+    });
+
+    var stopButton = document.getElementById("stop-button");
+    stopButton.addEventListener("click", function() {
+        simulationState = "STOP";
+    });
+
+    var restartButton = document.getElementById("restart-button");
+    restartButton.addEventListener("click", function() {
+        simulationState = "RESTART";
+    });
+
+    translationLoc = gl.getUniformLocation(program, "translation");
 
     render();
 };
 
-
-var gravity = -0.00098;
-var velocityY = 0.0;
-var positionY = 1.0;
-var floorY = -1.0;
-var leftBoundary = -1.0;
-var rightBoundary = 1.0;
-
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    // Update kecepatan vertikal dengan gravitasi
-    velocityY += gravity;
-
-    // Update posisi vertikal objek dengan kecepatan
-    positionY += velocityY;
-
-    // Batasi objek agar tidak keluar dari batas bawah (canvas floor)
-    if (positionY < floorY) {
-        positionY = floorY;
+    if (simulationState == "START") {
+        time += deltaTime;
+    } else if (simulationState == "RESTART") {
+        time = 0.0;
+        y = 0.0;
+        x = 0.0;
         velocityY = 0.0;
+        velocityX = 2.0;
+        simulationState = "STOP";
     }
 
-    // Update posisi horizontal dengan kecepatan slider
-    // translation += translationSpeed;
+    var friction = mu * massa * -gravity;
 
-    // Batasi posisi horizontal agar tidak keluar dari canvas
-    // if (translation > rightBoundary) {
-    //     translation = rightBoundary;
-    // } else if (translation < leftBoundary) {
-    //     translation = leftBoundary;
-    // }
+    if (y > -boundY) {
+        y = 0.0 + velocityY * time + 0.5 * gravity * time * time;
+    }
 
-    // Buat matriks translasi berdasarkan posisi saat ini
-    var translationMatrix = translate(translation, positionY, 0.0);
+    if (velocityX > 0 && y <= -boundY) {
+        if (Math.abs(velocityX) >= friction / massa) {
+            velocityX -= friction / massa * deltaTime;
+        } else {
+            velocityX = 0;
+        }
+    } else if (velocityX < 0 && y <= -boundY) {
+        if (Math.abs(velocityX) >= friction / massa) {
+            velocityX += friction / massa * deltaTime;
+        } else {
+            velocityX = 0;
+        }
+    }
 
+    if (y <= -boundY) {
+        velocityY = 0;
+        y = -boundY;
+    }
+
+    if (Math.abs(velocityX) > 0) {
+        if (x <= boundX && x >= -boundX) {
+            x = 0.0 + velocityX * time;
+            console.log(velocityX);
+        }
+    }
+
+    var translationMatrix = translate(x, y, 0.0);
     gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(translationMatrix));
 
-    // Render objek
     gl.drawArrays(gl.TRIANGLES, 0, numPositions);
 
     requestAnimationFrame(render);
 }
-
