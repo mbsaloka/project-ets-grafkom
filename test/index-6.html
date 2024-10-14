@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Simulation</title>
+    <style>
+        /* Add some basic styling to our page */
+        body {
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <!-- Create a canvas element for our WebGL rendering -->
+    <canvas id="canvas" width="800" height="600"></canvas>
+
+    <!-- Add UI elements for user input -->
+    <div id="ui">
+        <h2>Physics Simulation</h2>
+        <label>Arah Gaya:</label>
+        <input type="range" id="force-direction" min="0" max="360" value="0">
+        <br>
+        <label>Besar Gaya:</label>
+        <input type="number" id="force-magnitude" value="1">
+        <br>
+        <label>Gravitasi:</label>
+        <input type="checkbox" id="gravity-toggle">
+        <label>Value:</label>
+        <input type="number" id="gravity-value" value="9.8">
+        <br>
+        <label>Gaya Gesek:</label>
+        <input type="checkbox" id="friction-toggle">
+        <label>Value:</label>
+        <input type="number" id="friction-value" value="0.5">
+        <br>
+        <label>Massa Benda:</label>
+        <input type="number" id="mass" value="1">
+        <br>
+        <label>Bentuk Object:</label>
+        <select id="object-shape">
+            <option value="circle">Lingkaran</option>
+            <option value="square">Persegi</option>
+            <option value="equilateral-triangle">Segitiga Sama Sisi</option>
+        </select>
+        <br>
+        <button id="start-button">Start</button>
+        <button id="clear-button">Clear</button>
+        <button id="reset-button">Reset</button>
+    </div>
+
+    <script>
+      // Get the canvas element and create a WebGL context
+      const canvas = document.getElementById('canvas');
+      const gl = canvas.getContext('webgl');
+
+      // Initialize some variables
+      let simulationRunning = false;
+      let objectShape = 'circle';
+      let forceDirection = 0;
+      let forceMagnitude = 1;
+      let gravityEnabled = false;
+      let gravityValue = 9.8;
+      let frictionEnabled = false;
+      let frictionValue = 0.5;
+      let mass = 1;
+      let objectPosition = [0, 0];
+      let objectVelocity = [0, 0];
+      let trailPoints = [];
+
+      // Set up the WebGL scene
+      gl.clearColor(1.0, 1.0, 1.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      // Set up the UI event listeners
+      document.getElementById('force-direction').addEventListener('input', (e) => {
+          forceDirection = e.target.value;
+      });
+
+      document.getElementById('force-magnitude').addEventListener('input', (e) => {
+          forceMagnitude = e.target.value;
+      });
+
+      document.getElementById('gravity-toggle').addEventListener('input', (e) => {
+          gravityEnabled = e.target.checked;
+      });
+
+      document.getElementById('gravity-value').addEventListener('input', (e) => {
+          gravityValue = e.target.value;
+      });
+
+      document.getElementById('friction-toggle').addEventListener('input', (e) => {
+          frictionEnabled = e.target.checked;
+      });
+
+      document.getElementById('friction-value').addEventListener('input', (e) => {
+          frictionValue = e.target.value;
+      });
+
+      document.getElementById('mass').addEventListener('input', (e) => {
+          mass = e.target.value;
+      });
+
+      document.getElementById('object-shape').addEventListener('input', (e) => {
+          objectShape = e.target.value;
+      });
+
+      document.getElementById('start-button').addEventListener('click', () => {
+          simulationRunning = true;
+      });
+
+      document.getElementById('clear-button').addEventListener('click', () => {
+          trailPoints = [];
+      });
+
+      document.getElementById('reset-button').addEventListener('click', () => {
+          simulationRunning = false;
+          objectPosition = [0, 0];
+          objectVelocity = [0, 0];
+          trailPoints = [];
+      });
+
+      // Main simulation loop
+      function simulate() {
+          if (simulationRunning) {
+              // Update object position and velocity based on forces
+              // (TO DO: implement physics equations here)
+            const dt = 1 / 60; // waktu delta (1/60 detik)
+            const m = mass; // massa objek
+            const g = gravityValue; // percepatan gravitasi
+            const μ = frictionValue; // koefisien gesek
+            const F = forceMagnitude; // gaya yang diberikan oleh pengguna
+            const θ = forceDirection * Math.PI / 180; // sudut gaya
+
+            // Hitung gaya gravitasi
+            const Fg = m * g;
+
+            // Hitung gaya gesek
+            const N = m * g; // gaya normal
+            const Ff = μ * N;
+
+            // Hitung gaya yang diberikan oleh pengguna
+            const Fx = F * Math.cos(θ);
+            const Fy = F * Math.sin(θ);
+
+            // Hitung percepatan objek
+            const ax = (Fx - Ff) / m;
+            const ay = (Fy - Fg) / m;
+
+            // Update kecepatan objek
+            objectVelocity[0] += ax * dt;
+            objectVelocity[1] += ay * dt;
+
+            // Update posisi objek
+            objectPosition[0] += objectVelocity[0] * dt;
+            objectPosition[1] += objectVelocity[1] * dt;
+
+            // Batasi posisi objek agar tidak keluar dari canvas
+            if (objectPosition[0] < 0) {
+                objectPosition[0] = 0;
+                objectVelocity[0] = -objectVelocity[0];
+            } else if (objectPosition[0] > canvas.width) {
+                objectPosition[0] = canvas.width;
+                objectVelocity[0] = -objectVelocity[0];
+            }
+
+            if (objectPosition[1] < 0) {
+                objectPosition[1] = 0;
+                objectVelocity[1] = -objectVelocity[1];
+            } else if (objectPosition[1] > canvas.height) {
+                objectPosition[1] = canvas.height;
+                objectVelocity[1] = -objectVelocity[1];
+            }
+
+            // Tambahkan posisi objek ke trail
+            trailPoints.push([objectPosition[0], objectPosition[1]]);
+
+              // Draw the object and trail
+              gl .clear(gl.COLOR_BUFFER_BIT);
+              // (TO DO: implement WebGL drawing code here)
+              gl.beginPath();
+              switch (objectShape) {
+                  case 'circle':
+                      gl.arc(objectPosition[0], objectPosition[1], 10, 0, 2 * Math.PI);
+                      break;
+                  case 'square':
+                      gl.rect(objectPosition[0] - 10, objectPosition[1] - 10, 20, 20);
+                      break;
+                  case 'equilateral-triangle':
+                      gl.beginPath();
+                      gl.moveTo(objectPosition[0], objectPosition[1] - 10);
+                      gl.lineTo(objectPosition[0] + 10, objectPosition[1] + 10);
+                      gl.lineTo(objectPosition[0] - 10, objectPosition[1] + 10);
+                      gl.closePath();
+                      break;
+              }
+              gl.fillStyle = 'rgba(0, 0, 0, 1)';
+              gl.fill();
+
+              // Draw the trail
+              gl.beginPath();
+              gl.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+              gl.lineWidth = 2;
+              for (let i = 0; i < trailPoints.length; i++) {
+                  gl.lineTo(trailPoints[i][0], trailPoints[i][1]);
+              }
+              gl.stroke();
+
+              // Request the next frame
+              requestAnimationFrame(simulate);
+          }
+      }
+
+      // Start the simulation loop
+      simulate();
+    </script>
+</body>
+</html>

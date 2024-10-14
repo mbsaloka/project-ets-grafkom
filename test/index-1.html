@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL Object Movement Simulation</title>
+    <style>
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background-color: black;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glCanvas" width="640" height="480"></canvas>
+    <div class="controls">
+        <label for="posX">Initial X Position: </label>
+        <input type="number" id="posX" value="0" step="0.1">
+        <label for="posY">Initial Y Position: </label>
+        <input type="number" id="posY" value="0" step="0.1">
+        <label for="velX">X Velocity: </label>
+        <input type="number" id="velX" value="0.01" step="0.01">
+        <label for="velY">Y Velocity: </label>
+        <input type="number" id="velY" value="0.01" step="0.01">
+        <button id="startBtn">Start</button>
+    </div>
+
+    <script>
+        let glCanvas = document.getElementById('glCanvas');
+        let gl = glCanvas.getContext('webgl');
+
+        if (!gl) {
+            alert("WebGL not supported, falling back on experimental-webgl");
+            gl = glCanvas.getContext('experimental-webgl');
+        }
+
+        if (!gl) {
+            alert("Your browser does not support WebGL");
+        }
+
+        // Define the vertex shader
+        const vertexShaderSource = `
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0, 1);
+                gl_PointSize = 10.0;
+            }
+        `;
+
+        // Define the fragment shader
+        const fragmentShaderSource = `
+            precision mediump float;
+            void main() {
+                gl_FragColor = vec4(1, 1, 0, 1);  // yellow color
+            }
+        `;
+
+        // Compile shaders
+        function compileShader(source, type) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compile failed with: ' + gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vertexShader = compileShader(vertexShaderSource, gl.VERTEX_SHADER);
+        const fragmentShader = compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER);
+
+        // Create program
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error('Program failed to link: ' + gl.getProgramInfoLog(program));
+        }
+
+        gl.useProgram(program);
+
+        // Look up the position attribute location
+        const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+
+        // Create buffer and bind it
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        let positions = [0, 0];
+
+        // Setup data for position attribute
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+        // Clear the canvas
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        let x = parseFloat(document.getElementById('posX').value);
+        let y = parseFloat(document.getElementById('posY').value);
+        let vx = parseFloat(document.getElementById('velX').value);
+        let vy = parseFloat(document.getElementById('velY').value);
+
+        function updatePosition() {
+            x += vx;
+            y += vy;
+
+            // Wrap around the screen
+            if (x > 1.0) x = -1.0;
+            if (x < -1.0) x = 1.0;
+            if (y > 1.0) y = -1.0;
+            if (y < -1.0) y = 1.0;
+
+            positions = [x, y];
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.POINTS, 0, 1);
+            requestAnimationFrame(updatePosition);
+        }
+
+        document.getElementById('startBtn').addEventListener('click', function() {
+            x = parseFloat(document.getElementById('posX').value);
+            y = parseFloat(document.getElementById('posY').value);
+            vx = parseFloat(document.getElementById('velX').value);
+            vy = parseFloat(document.getElementById('velY').value);
+            requestAnimationFrame(updatePosition);
+        });
+    </script>
+</body>
+</html>
