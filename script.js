@@ -19,9 +19,8 @@ var uProjectionMatrix;
 
 var translation = 0.0;
 var translationSpeed = 0.0;
-var translationLoc;
 
-var simulationState = "STOP";
+var simulationState = "RESET";
 
 var time = 0.0;
 var deltaTime = 0.016;
@@ -30,13 +29,16 @@ var gravity = -0.981;
 var boundX = 4.9;
 var boundY = 4.8;
 
-var velocityX = 2.0;
+var velocityX = 0.0;
 var velocityY = 0.0;
 
-var x = 0.0;
-var y = 4.8;
+var initialX = 0.0;
+var initialY = 0.0;
 
-var massa = 1;
+var x = 0.0;
+var y = 0.0;
+
+var mass = 1;
 var mu = 0.5;
 
 init();
@@ -100,7 +102,42 @@ function init()
         simulationState = "RESET";
     });
 
-    translationLoc = gl.getUniformLocation(program, "translation");
+
+    var massInput = document.getElementById("input-mass");
+    massInput.addEventListener("input", function() {
+        mass = parseFloat(massInput.value);
+    });
+
+    var muInput = document.getElementById("input-mu");
+    muInput.addEventListener("input", function() {
+        mu = parseFloat(muInput.value);
+    });
+
+    var velocityXInput = document.getElementById("input-vx");
+    velocityXInput.addEventListener("input", function() {
+        velocityX = parseFloat(velocityXInput.value);
+    });
+
+    var velocityYInput = document.getElementById("input-vy");
+    velocityYInput.addEventListener("input", function() {
+        velocityY = parseFloat(velocityYInput.value);
+    });
+
+    var gravityCheckbox = document.getElementById("checkbox-gravity");
+    gravityCheckbox.addEventListener("change", function() {
+        if (gravityCheckbox.checked) {
+            gravity = -0.981;
+        } else {
+            gravity = 0;
+        }
+    });
+
+    var frictionCheckbox = document.getElementById("checkbox-friction");
+    frictionCheckbox.addEventListener("change", function() {
+        if (!frictionCheckbox.checked) {
+            mu = 0.0;
+        }
+    });
 
     render();
 };
@@ -108,58 +145,13 @@ function init()
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    if (simulationState == "START") {
-        time += deltaTime;
-
-        if (y > -boundY) {
-            y += velocityY * deltaTime + 0.5 * gravity * time * time;
-        }
-
-        if (x < boundX && x > -boundX) {
-            x += velocityX * deltaTime;
-        } else {
-            if (x >= boundX) {
-                x = boundX;
-                if (velocityX > 0) {
-                    velocityX = -velocityX;
-                    x += velocityX * deltaTime;
-                }
-            } else if (x <= -boundX) {
-                x = -boundX;
-                if (velocityX < 0) {
-                    velocityX = -velocityX;
-                    x += velocityX * deltaTime;
-                }
-            }
-        }
-    } else if (simulationState == "RESET") {
-        time = 0.0;
-        y = 0.0;
-        x = 0.0;
-        velocityY = 0.0;
-        velocityX = 2.0;
-        simulationState = "STOP";
-    }
-
-    var friction = mu * massa * -gravity;
-
-    if (y <= -boundY) {
-        velocityY = 0;
-        y = -boundY;
-
-        if (velocityX > 0) {
-            if (Math.abs(velocityX) >= friction / massa * deltaTime) {
-                velocityX -= friction / massa * deltaTime;
-            } else {
-                velocityX = 0;
-            }
-        } else if (velocityX < 0) {
-            if (Math.abs(velocityX) >= friction / massa * deltaTime) {
-                velocityX += friction / massa * deltaTime;
-            } else {
-                velocityX = 0;
-            }
-        }
+    switch (simulationState) {
+        case "START":
+            processSimulation();
+            break;
+        case "RESET":
+            resetSimulation();
+            break;
     }
 
     var translationMatrix = translate(x, y, 0.0);
@@ -168,4 +160,58 @@ function render() {
     gl.drawArrays(gl.TRIANGLES, 0, numPositions);
 
     requestAnimationFrame(render);
+}
+
+function processSimulation() {
+    time += deltaTime;
+
+    var friction = mu * mass * -gravity;
+
+    if (y <= -boundY) {
+        velocityY = 0;
+        y = -boundY;
+
+        if (velocityX > 0) {
+            if (Math.abs(velocityX) >= friction / mass * deltaTime) {
+                velocityX -= friction / mass * deltaTime;
+            } else {
+                velocityX = 0;
+            }
+        } else if (velocityX < 0) {
+            if (Math.abs(velocityX) >= friction / mass * deltaTime) {
+                velocityX += friction / mass * deltaTime;
+            } else {
+                velocityX = 0;
+            }
+        }
+    } else if (y > -boundY) {
+        y += velocityY * deltaTime + 0.5 * gravity * time * time;
+    }
+
+    if (x < boundX && x > -boundX) {
+        x += velocityX * deltaTime;
+    } else {
+        if (x >= boundX) {
+            x = boundX;
+            if (velocityX > 0) {
+                velocityX = -velocityX;
+                x += velocityX * deltaTime;
+            }
+        } else if (x <= -boundX) {
+            x = -boundX;
+            if (velocityX < 0) {
+                velocityX = -velocityX;
+                x += velocityX * deltaTime;
+            }
+        }
+    }
+}
+
+function resetSimulation() {
+    time = 0.0;
+    x = initialX;
+    y = initialY;
+    velocityY = 0.0;
+    velocityX = 0.0;
+    simulationState = "STOP";
 }
