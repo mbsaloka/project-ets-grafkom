@@ -95,9 +95,9 @@ function init()
         simulationState = "STOP";
     });
 
-    var restartButton = document.getElementById("restart-button");
-    restartButton.addEventListener("click", function() {
-        simulationState = "RESTART";
+    var resetButton = document.getElementById("reset-button");
+    resetButton.addEventListener("click", function() {
+        simulationState = "RESET";
     });
 
     translationLoc = gl.getUniformLocation(program, "translation");
@@ -132,7 +132,7 @@ function render() {
                 }
             }
         }
-    } else if (simulationState == "RESTART") {
+    } else if (simulationState == "RESET") {
         time = 0.0;
         y = 0.0;
         x = 0.0;
