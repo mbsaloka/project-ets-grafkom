@@ -25,7 +25,7 @@ var simulationState = "STOP";
 
 var time = 0.0;
 var deltaTime = 0.016;
-var gravity = -9.81;
+var gravity = -0.981;
 
 var boundX = 4.9;
 var boundY = 4.8;
@@ -33,11 +33,11 @@ var boundY = 4.8;
 var velocityX = 2.0;
 var velocityY = 0.0;
 
-var x = 0.0
-var y = 0.0;
+var x = 0.0;
+var y = 4.8;
 
 var massa = 1;
-var mu = 0.1;
+var mu = 0.5;
 
 init();
 
@@ -110,6 +110,28 @@ function render() {
 
     if (simulationState == "START") {
         time += deltaTime;
+
+        if (y > -boundY) {
+            y += velocityY * deltaTime + 0.5 * gravity * time * time;
+        }
+
+        if (x < boundX && x > -boundX) {
+            x += velocityX * deltaTime;
+        } else {
+            if (x >= boundX) {
+                x = boundX;
+                if (velocityX > 0) {
+                    velocityX = -velocityX;
+                    x += velocityX * deltaTime;
+                }
+            } else if (x <= -boundX) {
+                x = -boundX;
+                if (velocityX < 0) {
+                    velocityX = -velocityX;
+                    x += velocityX * deltaTime;
+                }
+            }
+        }
     } else if (simulationState == "RESTART") {
         time = 0.0;
         y = 0.0;
@@ -121,33 +143,22 @@ function render() {
 
     var friction = mu * massa * -gravity;
 
-    if (y > -boundY) {
-        y = 0.0 + velocityY * time + 0.5 * gravity * time * time;
-    }
-
-    if (velocityX > 0 && y <= -boundY) {
-        if (Math.abs(velocityX) >= friction / massa) {
-            velocityX -= friction / massa * deltaTime;
-        } else {
-            velocityX = 0;
-        }
-    } else if (velocityX < 0 && y <= -boundY) {
-        if (Math.abs(velocityX) >= friction / massa) {
-            velocityX += friction / massa * deltaTime;
-        } else {
-            velocityX = 0;
-        }
-    }
-
     if (y <= -boundY) {
         velocityY = 0;
         y = -boundY;
-    }
 
-    if (Math.abs(velocityX) > 0) {
-        if (x <= boundX && x >= -boundX) {
-            x = 0.0 + velocityX * time;
-            console.log(velocityX);
+        if (velocityX > 0) {
+            if (Math.abs(velocityX) >= friction / massa * deltaTime) {
+                velocityX -= friction / massa * deltaTime;
+            } else {
+                velocityX = 0;
+            }
+        } else if (velocityX < 0) {
+            if (Math.abs(velocityX) >= friction / massa * deltaTime) {
+                velocityX += friction / massa * deltaTime;
+            } else {
+                velocityX = 0;
+            }
         }
     }
 
