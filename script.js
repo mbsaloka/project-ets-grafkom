@@ -222,7 +222,9 @@ function init()
     });
 
     var objectSizeSlider = document.getElementById("object-size");
+    var objectSizeValue = document.getElementById("object-size-value");
     objectSizeSlider.addEventListener("input", function() {
+        objectSizeValue.innerHTML = objectSizeSlider.value;
         objectSize = parseFloat(objectSizeSlider.value);
         processVerticesPositions();
         boundX = 15 - objectSize * 1.2;
@@ -292,6 +294,8 @@ function render() {
             break;
     }
 
+    console.log(velocityX, velocityY);
+
     if (isDrawTrajectory) {
         gl.uniform4fv(aColor, trajectoryColor);
         gl.uniform1f(uThetaLoc, -1.0);
@@ -306,7 +310,7 @@ function render() {
     gl.uniform1f(uThetaLoc, -1.0);
     gl.drawArrays(gl.TRIANGLES, 0, numPositions);
 
-    if (isUsingForce && velocityX == 0 && velocityY == 0) {
+    if ((isUsingForce && velocityX == 0 && velocityY == 0)) {
         gl.uniform4fv(aColor, lineColor);
         gl.uniform1f(uThetaLoc, newTheta);
         gl.drawArrays(gl.LINES, numPositions, 2);
