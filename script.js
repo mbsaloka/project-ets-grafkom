@@ -145,6 +145,10 @@ function init()
     frictionCheckbox.addEventListener("change", function() {
         if (!frictionCheckbox.checked) {
             mu = 0.0;
+            newMu = 0.0;
+        } else {
+            mu = muInput.value;
+            newMu = muInput.value;
         }
     });
 
