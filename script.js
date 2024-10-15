@@ -233,6 +233,7 @@ function init()
 };
 
 function processVerticesPositions() {
+    var trajectoryTemp = positions.slice(numPositions + 2, positions.length);
     positions = [];
     switch (shapeChoosen) {
         case "SQUARE":
@@ -270,6 +271,8 @@ function processVerticesPositions() {
         vec4(0.0, 0.0, 0, 1.0),
         vec4(objectSize + 2.0, 0.0, 0, 1.0)
     );
+
+    positions = positions.concat(trajectoryTemp);
 
     gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 }
