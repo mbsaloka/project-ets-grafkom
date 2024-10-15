@@ -9,13 +9,18 @@ var vertices = [
 	vec4(-0.2, -0.2,  0, 1.0),
 	vec4(-0.2,  0.2,  0, 1.0),
 	vec4(0.2,  0.2,  0, 1.0),
-	vec4(0.2, -0.2,  0, 1.0)
+	vec4(0.2, -0.2,  0, 1.0),
+    vec4(0.0, 0.0, 0, 1.0),
+    vec4(2 * Math.cos(0), 2 * Math.sin(0), 0, 1.0)
 ];
 
 var color = vec4(1.0, 0.0, 0.0, 1.0);
+var lineColor = vec4(0.0, 0.0, 1.0, 1.0);
+var aColor;
 
 var uModelViewMatrix;
 var uProjectionMatrix;
+var uThetaLoc;
 
 var translation = 0.0;
 var translationSpeed = 0.0;
@@ -73,6 +78,9 @@ function init()
     positions.push(vertices[3]);
     positions.push(vertices[2]);
 
+    positions.push(vertices[4]);
+    positions.push(vertices[5]);
+
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
@@ -84,17 +92,14 @@ function init()
     gl.vertexAttribPointer(positionLoc, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionLoc);
 
-    var aColor = gl.getUniformLocation(program, "aColor");
+    aColor = gl.getUniformLocation(program, "aColor");
     gl.uniform4fv(aColor, color);
 
     uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
     uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
     gl.uniformMatrix4fv(uProjectionMatrix, false, flatten(ortho(-5, 5, -5, 5, -100, 100)));
 
-	// var slider = document.getElementById("SampleSlide");
-	// slider.addEventListener("input", function() {
-	// 	translationSpeed = parseFloat(slider.value);
-	// });
+    uThetaLoc = gl.getUniformLocation(program, "uTheta");
 
     var startButton = document.getElementById("start-button");
     startButton.addEventListener("click", function() {
@@ -111,7 +116,6 @@ function init()
     resetButton.addEventListener("click", function() {
         simulationState = "RESET";
     });
-
 
     var massInput = document.getElementById("input-mass");
     massInput.addEventListener("input", function() {
@@ -185,8 +189,6 @@ function init()
         thetaValueDisplay.innerHTML = thetaInput.value + "°";
     });
 
-
-
     render();
 };
 
@@ -205,8 +207,15 @@ function render() {
     var translationMatrix = translate(x, y, 0.0);
     gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(translationMatrix));
 
+    gl.uniform4fv(aColor, color);
+    gl.uniform1f(uThetaLoc, -1.0);
     gl.drawArrays(gl.TRIANGLES, 0, numPositions);
 
+    if (isUsingForce && velocityX == 0 && velocityY == 0) {
+        gl.uniform4fv(aColor, lineColor);
+        gl.uniform1f(uThetaLoc, newTheta);
+        gl.drawArrays(gl.LINES, numPositions, 2);
+    }
     requestAnimationFrame(render);
 }
 
