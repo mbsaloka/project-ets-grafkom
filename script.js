@@ -22,7 +22,6 @@ var translationSpeed = 0.0;
 
 var simulationState = "RESET";
 
-var time = 0.0;
 var deltaTime = 0.032;
 var gravity = -9.81;
 
@@ -43,6 +42,13 @@ var mu = 0.3, newMu = 0.3;
 
 var bounceFactor = 0.5, newBounceFactor = 0.5;
 var totalBounce = 0;
+
+var isUsingForce = true;
+var F = 0, newF = 0;
+var theta = 0, newTheta = 0;
+
+var forceX;
+var forceY;
 
 init();
 
@@ -127,6 +133,11 @@ function init()
         newVelocityY = parseFloat(velocityYInput.value);
     });
 
+    var forceInput = document.getElementById("input-force");
+    forceInput.addEventListener("input", function() {
+        newF = parseFloat(forceInput.value);
+    });
+
     var bounceFactorInput = document.getElementById("input-bounce-factor");
     bounceFactorInput.addEventListener("input", function() {
         newBounceFactor = parseFloat(bounceFactorInput.value);
@@ -152,6 +163,30 @@ function init()
         }
     });
 
+    var forceCheckbox = document.getElementById("checkbox-force");
+    forceCheckbox.addEventListener("change", function() {
+        if (forceCheckbox.checked) {
+            velocityXInput.disabled = true;
+            velocityYInput.disabled = true;
+            forceInput.disabled = false;
+            isUsingForce = true;
+        } else {
+            velocityXInput.disabled = false;
+            velocityYInput.disabled = false;
+            forceInput.disabled = true;
+            isUsingForce = false;
+        }
+    });
+
+    var thetaValueDisplay = document.getElementById("theta-value");
+    var thetaInput = document.getElementById("slider-theta");
+    thetaInput.addEventListener("input", function() {
+        newTheta = parseFloat(thetaInput.value);
+        thetaValueDisplay.innerHTML = thetaInput.value + "°";
+    });
+
+
+
     render();
 };
 
@@ -176,8 +211,6 @@ function render() {
 }
 
 function processSimulation() {
-    time += deltaTime;
-
     var friction = mu * mass * -gravity;
 
     if (y <= -boundY && velocityY <= 0) {
@@ -237,7 +270,6 @@ function processSimulation() {
 }
 
 function resetSimulation() {
-    time = 0.0;
     x = initialX;
     y = initialY;
     velocityY = 0.0;
@@ -247,13 +279,28 @@ function resetSimulation() {
     mu = 0.3;
     mass = 1;
     gravity = -9.81;
+    F = 0;
+    theta = 0;
+    forceX = 0;
+    forceY = 0;
     simulationState = "STOP";
 }
 
 function updateSimulationParameters() {
-    velocityX = newVelocityX;
-    velocityY = newVelocityY;
     mass = newMass;
     mu = newMu;
     bounceFactor = newBounceFactor;
+
+    if (isUsingForce) {
+        F = newF;
+        theta = newTheta * (Math.PI / 180);
+        forceX = F * Math.cos(theta);
+        forceY = F * Math.sin(theta);
+        velocityX = forceX / mass;
+        velocityY = forceY / mass;
+    } else {
+        velocityX = newVelocityX;
+        velocityY = newVelocityY;
+    }
+
 }
