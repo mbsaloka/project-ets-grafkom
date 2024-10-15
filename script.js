@@ -178,6 +178,38 @@ function init()
         processVerticesPositions();
     });
 
+    var colorSelect = document.getElementById("color-select");
+    colorSelect.addEventListener("change", function() {
+        switch (colorSelect.value) {
+            case "RED":
+                color = vec4(1.0, 0.0, 0.0, 1.0);
+                break;
+            case "GREEN":
+                color = vec4(0.0, 1.0, 0.0, 1.0);
+                break;
+            case "BLUE":
+                color = vec4(0.0, 0.0, 1.0, 1.0);
+                break;
+            case "ORANGE":
+                color = vec4(1.0, 0.5, 0.0, 1.0);
+                break;
+            case "PURPLE":
+                color = vec4(0.5, 0.0, 1.0, 1.0);
+                break;
+            case "YELLOW":
+                color = vec4(1.0, 1.0, 0.0, 1.0);
+                break;
+        }
+    });
+
+    var objectSizeSlider = document.getElementById("object-size");
+    objectSizeSlider.addEventListener("input", function() {
+        objectSize = parseFloat(objectSizeSlider.value);
+        processVerticesPositions();
+        boundX = 15 - objectSize * 1.2;
+        boundY = 5 - objectSize;
+    });
+
     render();
 };
 
@@ -186,12 +218,12 @@ function processVerticesPositions() {
     switch (shapeChoosen) {
         case "SQUARE":
             positions.push(
-                vec4(-0.2, -0.2,  0, 1.0),
-                vec4(-0.2,  0.2,  0, 1.0),
-                vec4(0.2,  0.2,  0, 1.0),
-                vec4(-0.2, -0.2,  0, 1.0),
-                vec4(0.2, -0.2,  0, 1.0),
-                vec4(0.2,  0.2,  0, 1.0)
+                vec4(-objectSize, -objectSize,  0, 1.0),
+                vec4(-objectSize,  objectSize,  0, 1.0),
+                vec4(objectSize,  objectSize,  0, 1.0),
+                vec4(-objectSize, -objectSize,  0, 1.0),
+                vec4(objectSize, -objectSize,  0, 1.0),
+                vec4(objectSize,  objectSize,  0, 1.0)
             )
             numPositions = 6;
             break;
@@ -217,8 +249,9 @@ function processVerticesPositions() {
 
     positions.push(
         vec4(0.0, 0.0, 0, 1.0),
-        vec4(2.0, 0.0, 0, 1.0)
+        vec4(objectSize + 2.0, 0.0, 0, 1.0)
     );
+
     gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 }
 
