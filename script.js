@@ -29,8 +29,8 @@ var gravity = -9.81;
 var boundX = 4.9;
 var boundY = 4.8;
 
-var velocityX = 0.0;
-var velocityY = 0.0;
+var velocityX = 0.0, newVelocityX = 0.0;
+var velocityY = 0.0, newVelocityY = 0.0;
 
 var initialX = 0.0;
 var initialY = 0.0;
@@ -38,10 +38,10 @@ var initialY = 0.0;
 var x = 0.0;
 var y = 0.0;
 
-var mass = 1;
-var mu = 0.3;
+var mass = 1, newMass = 1;
+var mu = 0.3, newMu = 0.3;
 
-var bounceFactor = 0.5;
+var bounceFactor = 0.5, newBounceFactor = 0.5;
 var totalBounce = 0;
 
 init();
@@ -92,6 +92,7 @@ function init()
 
     var startButton = document.getElementById("start-button");
     startButton.addEventListener("click", function() {
+        updateSimulationParameters();
         simulationState = "START";
     });
 
@@ -108,22 +109,27 @@ function init()
 
     var massInput = document.getElementById("input-mass");
     massInput.addEventListener("input", function() {
-        mass = parseFloat(massInput.value);
+        newMass = parseFloat(massInput.value);
     });
 
     var muInput = document.getElementById("input-mu");
     muInput.addEventListener("input", function() {
-        mu = parseFloat(muInput.value);
+        newMu = parseFloat(muInput.value);
     });
 
     var velocityXInput = document.getElementById("input-vx");
     velocityXInput.addEventListener("input", function() {
-        velocityX = parseFloat(velocityXInput.value);
+        newVelocityX = parseFloat(velocityXInput.value);
     });
 
     var velocityYInput = document.getElementById("input-vy");
     velocityYInput.addEventListener("input", function() {
-        velocityY = parseFloat(velocityYInput.value);
+        newVelocityY = parseFloat(velocityYInput.value);
+    });
+
+    var bounceFactorInput = document.getElementById("input-bounce-factor");
+    bounceFactorInput.addEventListener("input", function() {
+        newBounceFactor = parseFloat(bounceFactorInput.value);
     });
 
     var gravityCheckbox = document.getElementById("checkbox-gravity");
@@ -232,5 +238,18 @@ function resetSimulation() {
     y = initialY;
     velocityY = 0.0;
     velocityX = 0.0;
+    totalBounce = 0;
+    bounceFactor = 0.5;
+    mu = 0.3;
+    mass = 1;
+    gravity = -9.81;
     simulationState = "STOP";
+}
+
+function updateSimulationParameters() {
+    velocityX = newVelocityX;
+    velocityY = newVelocityY;
+    mass = newMass;
+    mu = newMu;
+    bounceFactor = newBounceFactor;
 }
