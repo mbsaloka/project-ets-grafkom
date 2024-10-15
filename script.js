@@ -41,6 +41,9 @@ var y = 0.0;
 var mass = 1;
 var mu = 0.5;
 
+var bounceFactor = 0.5;
+var totalBounce = 0;
+
 init();
 
 function init()
@@ -141,6 +144,7 @@ function init()
 
     render();
 };
+// velocityY = 0;
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -167,9 +171,19 @@ function processSimulation() {
 
     var friction = mu * mass * -gravity;
 
-    if (y <= -boundY) {
-        velocityY = 0;
+    if (y < -boundY) {
         y = -boundY;
+
+        if (velocityY < 0) {
+            totalBounce++;
+            velocityY = -velocityY * Math.pow(bounceFactor, totalBounce);
+            y += velocityY * deltaTime;
+        }
+
+        if (y == -boundY && Math.abs(velocityY) < 0.1) {
+            velocityY = 0;
+            totalBounce = 0;
+        }
 
         if (velocityX > 0) {
             if (Math.abs(velocityX) >= friction / mass * deltaTime) {
@@ -185,7 +199,8 @@ function processSimulation() {
             }
         }
     } else if (y > -boundY) {
-        y += velocityY * deltaTime + 0.5 * gravity * time * time;
+        velocityY += gravity * time * Math.pow(bounceFactor, totalBounce);
+        y += velocityY * deltaTime;
     }
 
     if (x < boundX && x > -boundX) {
@@ -205,6 +220,8 @@ function processSimulation() {
             }
         }
     }
+
+    console.log(velocityY);
 }
 
 function resetSimulation() {
