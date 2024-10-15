@@ -30,7 +30,7 @@ var simulationState = "RESET";
 var deltaTime = 0.032;
 var gravity = -9.81;
 
-var boundX = 4.9;
+var boundX = 14.5;
 var boundY = 4.8;
 
 var velocityX = 0.0, newVelocityX = 0.0;
@@ -67,9 +67,6 @@ function init()
     gl.clearColor(0.8, 0.8, 0.8, 1.0);
 
     var ratio = canvas.width / canvas.height;
-    for (var vertex of vertices) {
-      vertex[0] = vertex[0] / ratio;
-    }
 
     positions.push(vertices[0]);
     positions.push(vertices[1]);
@@ -97,7 +94,7 @@ function init()
 
     uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
     uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
-    gl.uniformMatrix4fv(uProjectionMatrix, false, flatten(ortho(-5, 5, -5, 5, -100, 100)));
+    gl.uniformMatrix4fv(uProjectionMatrix, false, flatten(ortho(-ratio * 5, ratio * 5, -5, 5, -100, 100)));
 
     uThetaLoc = gl.getUniformLocation(program, "uTheta");
 
