@@ -5,14 +5,9 @@ var colorLoc;
 
 var positions = [];
 var numPositions = 6;
-var vertices = [
-	vec4(-0.2, -0.2,  0, 1.0),
-	vec4(-0.2,  0.2,  0, 1.0),
-	vec4(0.2,  0.2,  0, 1.0),
-	vec4(0.2, -0.2,  0, 1.0),
-    vec4(0.0, 0.0, 0, 1.0),
-    vec4(2 * Math.cos(0), 2 * Math.sin(0), 0, 1.0)
-];
+
+var shapeChoosen = "SQUARE";
+var objectSize = 0.2;
 
 var color = vec4(1.0, 0.0, 0.0, 1.0);
 var lineColor = vec4(0.0, 0.0, 1.0, 1.0);
@@ -68,21 +63,12 @@ function init()
 
     var ratio = canvas.width / canvas.height;
 
-    positions.push(vertices[0]);
-    positions.push(vertices[1]);
-    positions.push(vertices[2]);
-    positions.push(vertices[0]);
-    positions.push(vertices[3]);
-    positions.push(vertices[2]);
-
-    positions.push(vertices[4]);
-    positions.push(vertices[5]);
-
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
     var vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer );
+    processVerticesPositions();
     gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 
     var positionLoc = gl.getAttribLocation(program, "aPosition");
@@ -186,8 +172,55 @@ function init()
         thetaValueDisplay.innerHTML = thetaInput.value + "°";
     });
 
+    var shapeSelect = document.getElementById("shape-select");
+    shapeSelect.addEventListener("change", function() {
+        shapeChoosen = shapeSelect.value;
+        processVerticesPositions();
+    });
+
     render();
 };
+
+function processVerticesPositions() {
+    positions = [];
+    switch (shapeChoosen) {
+        case "SQUARE":
+            positions.push(
+                vec4(-0.2, -0.2,  0, 1.0),
+                vec4(-0.2,  0.2,  0, 1.0),
+                vec4(0.2,  0.2,  0, 1.0),
+                vec4(-0.2, -0.2,  0, 1.0),
+                vec4(0.2, -0.2,  0, 1.0),
+                vec4(0.2,  0.2,  0, 1.0)
+            )
+            numPositions = 6;
+            break;
+        case "CIRCLE":
+            var n = 50
+            var previousPos = vec4(objectSize, 0.0, 0.0, 1.0);
+
+            for (var i = 1; i <= n; i++) {
+                var angle = 2 * Math.PI * i / n;
+                var x = objectSize * Math.cos(angle);
+                var y = objectSize * Math.sin(angle);
+                var currentPos = vec4(x, y, 0.0, 1.0);
+
+                positions.push(previousPos);
+                positions.push(vec4(0.0, 0.0, 0.0, 1.0));
+                positions.push(currentPos);
+
+                previousPos = currentPos;
+            }
+            numPositions = n * 3;
+            break;
+    }
+
+    positions.push(
+        vec4(0.0, 0.0, 0, 1.0),
+        vec4(2.0, 0.0, 0, 1.0)
+    );
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+}
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -213,6 +246,7 @@ function render() {
         gl.uniform1f(uThetaLoc, newTheta);
         gl.drawArrays(gl.LINES, numPositions, 2);
     }
+
     requestAnimationFrame(render);
 }
 

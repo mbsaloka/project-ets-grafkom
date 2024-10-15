@@ -81,6 +81,29 @@
         align-items: center;
         margin: 10px;
     }
+
+    .style-container {
+        display: flex;
+        flex-direction: column;
+        margin-top: 15px;
+        width: 320px;
+    }
+
+    .select label {
+        margin-left: 12px;
+    }
+
+    .select {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 10px;
+    }
+
+    label {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
 </style>
 </head>
 
@@ -128,7 +151,7 @@
 
 <div class="slider-container">
     <div class="slider">
-        Theta (<span id="theta-value">90°</span>)
+        Theta (<span id="theta-value">0°</span>)
         0 <input id="slider-theta" type="range"
         min="0" max="360" step="1" value="0.0" />
         360
@@ -152,10 +175,34 @@
     </div>
 </div>
 
-<!-- <select id="SampleMenu" size="2">
-    <option value="0">Menu 1</option>
-    <option value="1">Menu 2</option>
-</select> -->
+<div class="style-container">
+    <div class="select">
+        <label for="shape-select">Object Shape</label>
+        <select id="shape-select" size="2">
+            <option value="SQUARE">Square</option>
+            <option value="CIRCLE">Circle</option>
+        </select>
+    </div>
+
+    <div class="select">
+        <label for="color-select">Object Color</label>
+        <select id="color-select" size="6">
+            <option value="0">Red</option>
+            <option value="1">Green</option>
+            <option value="2">Blue</option>
+            <option value="3">Orange</option>
+            <option value="4">Purple</option>
+            <option value="5">Yellow</option>
+        </select>
+    </div>
+
+    <div class="slider">
+        Object Size (<span id="object-size-value">0.2</span>)
+        0.1 <input id="object-size" type="range"
+        min="0.1" max="2.0" step="0.1" value="0.2" />
+        2.0
+    </div>
+</div>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 #version 300 es
