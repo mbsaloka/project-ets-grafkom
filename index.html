@@ -27,11 +27,11 @@
 
     .button-container {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
         justify-content: center;
         align-items: center;
         margin: 10px;
-        width: 500px;
+        width: 700px;
     }
 
     .input-container {
@@ -114,6 +114,7 @@
     <button id="start-button">Start</button>
     <button id="stop-button">Stop</button>
     <button id="reset-button">Reset</button>
+    <button id="clear-button">Clear</button>
 </div>
 
 <div class="input-container">
@@ -172,6 +173,11 @@
     <div class="checkbox">
         <label for="checkbox-force">Force</label>
         <input id="checkbox-force" type="checkbox" checked />
+    </div>
+
+    <div class="checkbox">
+        <label for="checkbox-trajectory">Trajectory</label>
+        <input id="checkbox-trajectory" type="checkbox" checked />
     </div>
 </div>
 

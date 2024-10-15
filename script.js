@@ -5,13 +5,17 @@ var colorLoc;
 
 var positions = [];
 var numPositions = 6;
+var numTrajectoryPoints = 0;
 
 var shapeChoosen = "SQUARE";
 var objectSize = 0.2;
 
 var color = vec4(1.0, 0.0, 0.0, 1.0);
 var lineColor = vec4(0.0, 0.0, 1.0, 1.0);
+var trajectoryColor = vec4(0.2, 0.2, 0.2, 1.0);
 var aColor;
+
+var isDrawTrajectory = true;
 
 var uModelViewMatrix;
 var uProjectionMatrix;
@@ -100,6 +104,11 @@ function init()
         simulationState = "RESET";
     });
 
+    var clearButton = document.getElementById("clear-button");
+    clearButton.addEventListener("click", function() {
+        clearTrajectory();
+    });
+
     var massInput = document.getElementById("input-mass");
     massInput.addEventListener("input", function() {
         newMass = parseFloat(massInput.value);
@@ -162,6 +171,16 @@ function init()
             velocityYInput.disabled = false;
             forceInput.disabled = true;
             isUsingForce = false;
+        }
+    });
+
+    var trajectoryCheckbox = document.getElementById("checkbox-trajectory");
+    trajectoryCheckbox.addEventListener("change", function() {
+        if (trajectoryCheckbox.checked) {
+            isDrawTrajectory = true;
+        } else {
+            isDrawTrajectory = false;
+            clearTrajectory();
         }
     });
 
@@ -261,10 +280,20 @@ function render() {
     switch (simulationState) {
         case "START":
             processSimulation();
+            if (isDrawTrajectory) {
+                drawTrajectory();
+            }
             break;
         case "RESET":
             resetSimulation();
             break;
+    }
+
+    if (isDrawTrajectory) {
+        gl.uniform4fv(aColor, trajectoryColor);
+        gl.uniform1f(uThetaLoc, -1.0);
+        gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
+        gl.drawArrays(gl.LINES, numPositions + 2, numTrajectoryPoints);
     }
 
     var translationMatrix = translate(x, y, 0.0);
@@ -357,6 +386,7 @@ function resetSimulation() {
     forceX = 0;
     forceY = 0;
     simulationState = "STOP";
+    clearTrajectory();
 }
 
 function updateSimulationParameters() {
@@ -376,4 +406,18 @@ function updateSimulationParameters() {
         velocityY = newVelocityY;
     }
 
+}
+
+function drawTrajectory() {
+    if (velocityX != 0 || velocityY != 0) {
+        numTrajectoryPoints++;
+        positions.push(vec4(x, y, 0.0, 1.0));
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+    }
+}
+
+function clearTrajectory() {
+    numTrajectoryPoints = 0;
+    positions = positions.slice(0, numPositions + 2);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 }
