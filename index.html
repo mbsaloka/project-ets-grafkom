@@ -3,215 +3,120 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
 <title>Tugas Project</title>
-
-<style>
-    body {
-        display: flex;
-        /* justify-content: center; */
-        align-items: center;
-        flex-direction: column;
-        height: 100vh;
-        margin: 0px;
-        background-color: #f0f0f0;
-    }
-
-    canvas {
-        border: 1px solid black;
-        margin-top: 30px;
-    }
-
-    button, select {
-        margin: 10px;
-        padding: 5px;
-    }
-
-    .button-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr 1fr;
-        justify-content: center;
-        align-items: center;
-        margin: 10px;
-        width: 700px;
-    }
-
-    .input-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        justify-content: center;
-        align-items: center;
-        margin: 10px;
-        width: 1000px;
-        text-align: center;
-    }
-
-    .input-number {
-        margin: 10px;
-    }
-
-    .input-number label {
-        display: block;
-        text-align: left;
-        margin-left: 35px;
-    }
-
-    .input-number input {
-        padding: 5px;
-        margin-top: 5px;
-        width: 75%;
-    }
-
-    .checkbox-container {
-        display: flex;
-        margin: 10px;
-    }
-
-    .checkbox {
-        display: flex;
-        align-items: center;
-        margin: 10px;
-    }
-
-    .slider-container {
-        display: flex;
-        margin: 10px;
-    }
-
-    .slider {
-        display: flex;
-        align-items: center;
-        margin: 10px;
-    }
-
-    .style-container {
-        display: flex;
-        flex-direction: column;
-        margin-top: 15px;
-        width: 320px;
-    }
-
-    .select label {
-        margin-left: 12px;
-    }
-
-    .select {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 10px;
-    }
-
-    label {
-        font-weight: bold;
-        font-size: 14px;
-    }
-
-</style>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-<canvas id="gl-canvas" width="1536" height="512"></canvas>
-
-<div class="button-container">
-    <button id="start-button">Start</button>
-    <button id="stop-button">Stop</button>
-    <button id="reset-button">Reset</button>
-    <button id="clear-button">Clear</button>
-</div>
-
-<div class="input-container">
-    <div class="input-number">
-        <label for="input-vx">Velocity X</label>
-        <input id="input-vx" type="number" step="0.1" value="0.0" min="-50" max="50" disabled />
+<h2>PROJECT ETS GRAFKOM</h2>
+<div class="container">
+    <div class="canvas-area">
+        <canvas id="gl-canvas" width="1536" height="512"></canvas>
     </div>
+    <div class="controls">
+        <div class="button-container">
+            <button id="start-button">Start</button>
+            <button id="stop-button">Stop</button>
+            <button id="reset-button">Reset</button>
+            <button id="clear-button">Clear</button>
+        </div>
 
-    <div class="input-number">
-        <label for="input-vy">Velocity Y</label>
-        <input id="input-vy" type="number" step="0.1" value="0.0" min="-50" max="50" disabled />
-    </div>
+        <div class="input-container">
+            <div class="input-number">
+                <label for="input-vx">Velocity X</label>
+                <input id="input-vx" type="number" step="0.1" value="0.0" min="-50" max="50" disabled />
+            </div>
 
-    <div class="input-number">
-        <label for="input-force">Force</label>
-        <input id="input-force" type="number" step="0.1" value="0.0" min="0.0" max="50" />
-    </div>
+            <div class="input-number">
+                <label for="input-vy">Velocity Y</label>
+                <input id="input-vy" type="number" step="0.1" value="0.0" min="-50" max="50" disabled />
+            </div>
 
-    <div class="input-number">
-        <label for="input-mass">Mass</label>
-        <input id="input-mass" type="number" step="0.1" value="1.0" min="0.5" max="10.0" />
-    </div>
+            <div class="input-number">
+                <label for="input-force">Force</label>
+                <input id="input-force" type="number" step="0.1" value="0.0" min="0.0" max="50" />
+            </div>
 
-    <div class="input-number">
-        <label for="input-mu">μ (Friction)</label>
-        <input id="input-mu" type="number" step="0.1" value="0.3" min="0.0" max="1.0" />
-    </div>
+            <div class="input-number">
+                <label for="input-mass">Mass</label>
+                <input id="input-mass" type="number" step="0.1" value="1.0" min="0.5" max="10.0" />
+            </div>
+
+            <div class="input-number">
+                <label for="input-mu">μ (Friction)</label>
+                <input id="input-mu" type="number" step="0.1" value="0.3" min="0.0" max="1.0" />
+            </div>
 
 
-    <div class="input-number">
-        <label for="input-bounce-factor">Bounce Factor</label>
-        <input id="input-bounce-factor" type="number" step="0.1" value="0.5" min="0.0" max="1.0" />
-    </div>
-</div>
+            <div class="input-number">
+                <label for="input-bounce-factor">Bounce Factor</label>
+                <input id="input-bounce-factor" type="number" step="0.1" value="0.5" min="0.0" max="1.0" />
+            </div>
+        </div>
 
-<div class="slider-container">
-    <div class="slider">
-        Theta (<span id="theta-value">0°</span>)
-        0 <input id="slider-theta" type="range"
-        min="0" max="360" step="1" value="0.0" />
-        360
-    </div>
-</div>
+        <div class="slider-container">
+            <div class="slider">
+                Theta (<span id="theta-value">0°</span>)
+                0 <input id="slider-theta" type="range"
+                min="0" max="360" step="1" value="0.0" />
+                360
+            </div>
 
-<div class="checkbox-container">
-    <div class="checkbox">
-        <label for="checkbox-gravity">Gravity</label>
-        <input id="checkbox-gravity" type="checkbox" checked />
-    </div>
+            <div class="slider">
+                Object Size (<span id="object-size-value">0.5</span>)
+                0.1 <input id="object-size" type="range"
+                min="0.1" max="2.0" step="0.1" value="0.5" />
+                2.0
+            </div>
+        </div>
 
-    <div class="checkbox">
-        <label for="checkbox-friction">Friction</label>
-        <input id="checkbox-friction" type="checkbox" checked />
-    </div>
+        <div class="checkbox-container">
+            <div class="checkbox">
+                <label for="checkbox-gravity">Gravity</label>
+                <input id="checkbox-gravity" type="checkbox" checked />
+            </div>
 
-    <div class="checkbox">
-        <label for="checkbox-force">Force</label>
-        <input id="checkbox-force" type="checkbox" checked />
-    </div>
+            <div class="checkbox">
+                <label for="checkbox-friction">Friction</label>
+                <input id="checkbox-friction" type="checkbox" checked />
+            </div>
 
-    <div class="checkbox">
-        <label for="checkbox-trajectory">Trajectory</label>
-        <input id="checkbox-trajectory" type="checkbox" checked />
-    </div>
+            <div class="checkbox">
+                <label for="checkbox-force">Force</label>
+                <input id="checkbox-force" type="checkbox" checked />
+            </div>
 
-    <div class="checkbox">
-        <label for="checkbox-perspective">Perspective</label>
-        <input id="checkbox-perspective" type="checkbox" />
-    </div>
-</div>
+            <div class="checkbox">
+                <label for="checkbox-trajectory">Trajectory</label>
+                <input id="checkbox-trajectory" type="checkbox" checked />
+            </div>
 
-<div class="style-container">
-    <div class="select">
-        <label for="shape-select">Object Shape</label>
-        <select id="shape-select" size="2">
-            <option value="SQUARE">Square</option>
-            <option value="CIRCLE">Circle</option>
-        </select>
-    </div>
+            <div class="checkbox">
+                <label for="checkbox-perspective">Perspective</label>
+                <input id="checkbox-perspective" type="checkbox" />
+            </div>
+        </div>
 
-    <div class="select">
-        <label for="color-select">Object Color</label>
-        <select id="color-select" size="6">
-            <option value="RED">Red</option>
-            <option value="GREEN">Green</option>
-            <option value="BLUE">Blue</option>
-            <option value="ORANGE">Orange</option>
-            <option value="PURPLE">Purple</option>
-            <option value="YELLOW">Yellow</option>
-        </select>
-    </div>
+        <div class="select-container">
+            <div class="select">
+                <label for="shape-select">Object Shape</label>
+                <select id="shape-select" size="2">
+                    <option value="SQUARE">Square</option>
+                    <option value="CIRCLE">Circle</option>
+                </select>
+            </div>
 
-    <div class="slider">
-        Object Size (<span id="object-size-value">0.5</span>)
-        0.1 <input id="object-size" type="range"
-        min="0.1" max="2.0" step="0.1" value="0.5" />
-        2.0
+            <div class="select">
+                <label for="color-select">Object Color</label>
+                <select id="color-select" size="6">
+                    <option value="RED">Red</option>
+                    <option value="GREEN">Green</option>
+                    <option value="BLUE">Blue</option>
+                    <option value="ORANGE">Orange</option>
+                    <option value="PURPLE">Purple</option>
+                    <option value="YELLOW">Yellow</option>
+                </select>
+            </div>
+        </div>
     </div>
 </div>
 
