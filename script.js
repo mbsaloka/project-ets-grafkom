@@ -237,15 +237,6 @@ function init()
         }
     });
 
-    var perspectiveCheckbox = document.getElementById("checkbox-perspective");
-    perspectiveCheckbox.addEventListener("change", function() {
-        if (perspectiveCheckbox.checked) {
-            isUsePerspective = true;
-        } else {
-            isUsePerspective = false;
-        }
-    });
-
     var thetaValueDisplay = document.getElementById("theta-value");
     var thetaInput = document.getElementById("slider-theta");
     thetaInput.addEventListener("input", function() {
@@ -338,6 +329,46 @@ function init()
     fovySlider.addEventListener("input", function() {
         fovyValue.innerHTML = fovySlider.value + "°";
         fovy = parseFloat(fovySlider.value);
+    });
+
+    var resetPerspectiveButton = document.getElementById("reset-perspective");
+    resetPerspectiveButton.addEventListener("click", function() {
+        resetPerspective();
+        nearSlider.value = near;
+        farSlider.value = far;
+        radiusSlider.value = radius;
+        thetaProjectionSlider.value = thetaProjection * 180 / Math.PI;
+        phiSlider.value = phi * 180 / Math.PI;
+        fovySlider.value = fovy;
+        nearValue.innerHTML = near;
+        farValue.innerHTML = far;
+        radiusValue.innerHTML = radius;
+        thetaProjectionValue.innerHTML = thetaProjectionSlider.value + "°";
+        phiValue.innerHTML = phiSlider.value + "°";
+        fovyValue.innerHTML = fovy;
+    });
+
+    var perspectiveCheckbox = document.getElementById("checkbox-perspective");
+    perspectiveCheckbox.addEventListener("change", function() {
+        if (perspectiveCheckbox.checked) {
+            isUsePerspective = true;
+            nearSlider.disabled = false;
+            farSlider.disabled = false;
+            radiusSlider.disabled = false;
+            thetaProjectionSlider.disabled = false;
+            phiSlider.disabled = false;
+            fovySlider.disabled = false;
+            resetPerspectiveButton.disabled = false;
+        } else {
+            isUsePerspective = false;
+            nearSlider.disabled = true;
+            farSlider.disabled = true;
+            radiusSlider.disabled = true;
+            thetaProjectionSlider.disabled = true;
+            phiSlider.disabled = true;
+            fovySlider.disabled = true;
+            resetPerspectiveButton.disabled = true;
+        }
     });
 
     render();
@@ -629,4 +660,13 @@ function quad(a, b, c, d) {
     colorsArray.push(vertexColors[a]);
     positions.push(cubeVertices[d]);
     colorsArray.push(vertexColors[a]);
+}
+
+function resetPerspective() {
+    near = 0.3;
+    far = 30;
+    radius = 18.0;
+    thetaProjection = 0.0;
+    phi = 0.0;
+    fovy = 60.0;
 }

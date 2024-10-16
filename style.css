@@ -39,7 +39,7 @@ body {
     grid-template-columns: 1fr 1fr 1fr;
     justify-content: center;
     align-items: center;
-    margin: 10px;
+    margin-top: 10px;
     text-align: center;
     width: 100%;
 }
@@ -136,15 +136,15 @@ button {
     font-weight: bold;
 }
 
-button#stop-button {
+button.stop {
     background-color: #dc3545;
 }
 
-button#reset-button {
+button.reset {
     background-color: #fd7e14;
 }
 
-button#start-button {
+button.start {
     background-color: #28a745;
 }
 
@@ -152,16 +152,25 @@ button:hover {
     background-color: #bed0df;
 }
 
-button#stop-button:hover {
+button.stop:hover {
     background-color: #f86d7d;
 }
 
-button#reset-button:hover {
+button.reset:hover {
     background-color: #ff9e4f;
 }
 
-button#start-button:hover {
+button.start:hover {
     background-color: #4dbd74;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    background-color: #ccc;
 }
 
 h1 {
