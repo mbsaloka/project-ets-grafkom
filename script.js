@@ -9,7 +9,7 @@ var numTrajectoryPoints = 0;
 var numGridLine = 0;
 
 var shapeChoosen = "SQUARE";
-var objectSize = 0.2;
+var objectSize = 0.5;
 
 var cubeVertices = [
     vec4(-objectSize, -objectSize, objectSize, 1.0),
@@ -26,7 +26,7 @@ var color = vec4(1.0, 0.0, 0.0, 1.0);
 var lineColor = vec4(0.0, 0.0, 1.0, 1.0);
 var trajectoryColor = vec4(0.0, 0.3, 0.3, 1.0);
 var gridColor = vec4(0.1, 0.1, 0.1, 0.5);
-var groundColor = vec4(0.0, 0.8, 0.0, 0.8);
+var groundColor = vec4(0.5, 0.8, 0.5, 0.8);
 var colorsArray = [];
 var uColor;
 
@@ -57,6 +57,7 @@ var gravity = -9.81;
 
 var boundX = 15;
 var boundY = 5;
+var boundZ = 5;
 
 var velocityX = 0.0, newVelocityX = 0.0;
 var velocityY = 0.0, newVelocityY = 0.0;
@@ -80,6 +81,23 @@ var theta = 0, newTheta = 0;
 var forceX;
 var forceY;
 
+var isUsePerspective = false;
+var near = 0.33;
+var far = 17;
+var radius = 15.0;
+var thetaProjection = 0.0;
+var phi = 0.0;
+var dr = 5.0 * Math.PI/180.0;
+
+var  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
+var  aspect;       // Viewport aspect ratio
+
+var modelViewMatrixLoc, projectionMatrixLoc;
+var modelViewMatrix, projectionMatrix;
+var eye;
+const at = vec3(0.0, 0.0, 0.0);
+const up = vec3(0.0, 1.0, 0.0);
+
 init();
 
 function init()
@@ -92,7 +110,7 @@ function init()
     gl.clearColor(0.8, 0.8, 0.8, 1.0);
     gl.enable(gl.DEPTH_TEST);
 
-    var ratio = canvas.width / canvas.height;
+    aspect = canvas.width / canvas.height;
 
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
@@ -120,7 +138,6 @@ function init()
 
     uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
     uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
-    gl.uniformMatrix4fv(uProjectionMatrix, false, flatten(ortho(-ratio * 5, ratio * 5, -5, 5, -100, 100)));
 
     uThetaLoc = gl.getUniformLocation(program, "uTheta");
 
@@ -220,6 +237,15 @@ function init()
         }
     });
 
+    var perspectiveCheckbox = document.getElementById("checkbox-perspective");
+    perspectiveCheckbox.addEventListener("change", function() {
+        if (perspectiveCheckbox.checked) {
+            isUsePerspective = true;
+        } else {
+            isUsePerspective = false;
+        }
+    });
+
     var thetaValueDisplay = document.getElementById("theta-value");
     var thetaInput = document.getElementById("slider-theta");
     thetaInput.addEventListener("input", function() {
@@ -281,12 +307,12 @@ function processVerticesPositions() {
 
     // Ground Vertices
     positions.push(
-        vec4(-boundX, -boundY, 5.0, 1.0),
-        vec4(boundX, -boundY, 5.0, 1.0),
-        vec4(-boundX, -boundY, -5.0, 1.0),
-        vec4(boundX, -boundY, 5.0, 1.0),
-        vec4(boundX, -boundY, -5.0, 1.0),
-        vec4(-boundX, -boundY, -5.0, 1.0)
+        vec4(-boundX, -boundY, boundZ, 1.0),
+        vec4(boundX, -boundY, boundZ, 1.0),
+        vec4(-boundX, -boundY, -boundZ, 1.0),
+        vec4(boundX, -boundY, boundZ, 1.0),
+        vec4(boundX, -boundY, -boundZ, 1.0),
+        vec4(-boundX, -boundY, -boundZ, 1.0)
     );
 
     // Grid Vertices
@@ -303,6 +329,22 @@ function processVerticesPositions() {
         positions.push(
             vec4(-boundX * 1.2, i, 0.0, 1.0),
             vec4(boundX * 1.2, i, 0.0, 1.0)
+        );
+        numGridLine += 2;
+    }
+
+    for (var i = -boundZ; i <= boundZ; i++) {
+        positions.push(
+            vec4(-boundX, -boundY, i, 1.0),
+            vec4(boundX, -boundY, i, 1.0)
+        );
+        numGridLine += 2;
+    }
+
+    for (var i = -boundX; i <= boundX; i++) {
+        positions.push(
+            vec4(i, -boundY, -boundZ, 1.0),
+            vec4(i, -boundY, boundZ, 1.0)
         );
         numGridLine += 2;
     }
@@ -365,31 +407,47 @@ function render() {
             break;
     }
 
+
+    var translationMatrix = translate(x, y, 0.0);
+    var modelViewMatrixTranslate;
+    if (isUsePerspective) {
+        eye = vec3(radius*Math.sin(thetaProjection)*Math.cos(phi),
+        radius*Math.sin(thetaProjection)*Math.sin(phi), radius*Math.cos(thetaProjection));
+        modelViewMatrix = lookAt(eye, at , up);
+        projectionMatrix = perspective(fovy, aspect, near, far);
+        modelViewMatrixTranslate = mult(modelViewMatrix, translationMatrix);
+    } else {
+        projectionMatrix = ortho(-aspect * 5, aspect * 5, -5, 5, -100, 100);
+        modelViewMatrix = mat4();
+        modelViewMatrixTranslate = translationMatrix;
+    }
+
+    gl.uniformMatrix4fv(uProjectionMatrix, false, flatten(projectionMatrix));
+
     // Draw Grid
     gl.uniform4fv(uColor, gridColor);
     gl.uniform1f(uThetaLoc, -1.0);
-    gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
+    gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(modelViewMatrix));
     gl.drawArrays(gl.LINES, 6, numGridLine);
 
     // Draw Ground
-    gl.uniform4fv(uColor, vec4(0.0, 1.0, 0.1, 1.0));
+    gl.uniform4fv(uColor, groundColor);
     gl.uniform1f(uThetaLoc, -1.0);
-    gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
+    gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(modelViewMatrix));
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     // Draw Trajectory
     if (isDrawTrajectory) {
         gl.uniform4fv(uColor, trajectoryColor);
         gl.uniform1f(uThetaLoc, -1.0);
-        gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
+        gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(modelViewMatrix));
         gl.drawArrays(gl.LINES, 6 + numGridLine + numPositions + 2, numTrajectoryPoints);
     }
 
     // Draw Object
-    var translationMatrix = translate(x, y, 0.0);
-    gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(translationMatrix));
+    gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(modelViewMatrixTranslate));
     gl.uniform4fv(uColor, vec4(0.0, 0.0, 0.0, 0.0));
-    gl.uniform1f(uThetaLoc, newTheta);
+    gl.uniform1f(uThetaLoc, -1.0);
     gl.drawArrays(gl.TRIANGLES, 6 + numGridLine, numPositions);
 
     // Draw Arrow
