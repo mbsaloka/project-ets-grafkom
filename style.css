@@ -126,20 +126,50 @@ label {
 
 button {
     padding: 10px 15px;
-    background-color: #4CAF50;
+    background-color: #6c757d;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+button#stop-button {
+    background-color: #dc3545;
+}
+
+button#reset-button {
+    background-color: #fd7e14;
+}
+
+button#start-button {
+    background-color: #28a745;
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: #bed0df;
 }
 
-h2 {
-    margin-left: 10px;
-    color: #333;
+button#stop-button:hover {
+    background-color: #f86d7d;
+}
 
+button#reset-button:hover {
+    background-color: #ff9e4f;
+}
+
+button#start-button:hover {
+    background-color: #4dbd74;
+}
+
+h1 {
+    margin: 10px;
+    color: #333;
+}
+
+h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
 }

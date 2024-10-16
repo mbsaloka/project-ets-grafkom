@@ -55,8 +55,8 @@ var simulationState = "RESET";
 var deltaTime = 0.032;
 var gravity = -9.81;
 
-var boundX = 15;
-var boundY = 5;
+var boundX = 14;
+var boundY = 8;
 var boundZ = 5;
 
 var velocityX = 0.0, newVelocityX = 0.0;
@@ -82,15 +82,15 @@ var forceX;
 var forceY;
 
 var isUsePerspective = false;
-var near = 0.33;
-var far = 17;
-var radius = 15.0;
+var near = 0.3;
+var far = 30;
+var radius = 18.0;
 var thetaProjection = 0.0;
 var phi = 0.0;
 var dr = 5.0 * Math.PI/180.0;
 
-var  fovy = 45.0;  // Field-of-view in Y direction angle (in degrees)
-var  aspect;       // Viewport aspect ratio
+var fovy = 60.0;
+var aspect;
 
 var modelViewMatrixLoc, projectionMatrixLoc;
 var modelViewMatrix, projectionMatrix;
@@ -298,6 +298,48 @@ function init()
         gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
     });
 
+    var nearSlider = document.getElementById("slider-near");
+    var nearValue = document.getElementById("near-value");
+    nearSlider.addEventListener("input", function() {
+        nearValue.innerHTML = nearSlider.value;
+        near = parseFloat(nearSlider.value);
+    });
+
+    var farSlider = document.getElementById("slider-far");
+    var farValue = document.getElementById("far-value");
+    farSlider.addEventListener("input", function() {
+        farValue.innerHTML = farSlider.value;
+        far = parseFloat(farSlider.value);
+    });
+
+    var radiusSlider = document.getElementById("slider-radius");
+    var radiusValue = document.getElementById("radius-value");
+    radiusSlider.addEventListener("input", function() {
+        radiusValue.innerHTML = radiusSlider.value;
+        radius = parseFloat(radiusSlider.value);
+    });
+
+    var thetaProjectionSlider = document.getElementById("slider-theta-projection");
+    var thetaProjectionValue = document.getElementById("theta-projection-value");
+    thetaProjectionSlider.addEventListener("input", function() {
+        thetaProjectionValue.innerHTML = thetaProjectionSlider.value + "°";
+        thetaProjection = parseFloat(thetaProjectionSlider.value) * Math.PI / 180.0;
+    });
+
+    var phiSlider = document.getElementById("slider-phi");
+    var phiValue = document.getElementById("phi-value");
+    phiSlider.addEventListener("input", function() {
+        phiValue.innerHTML = phiSlider.value + "°";
+        phi = parseFloat(phiSlider.value) * Math.PI / 180.0;
+    });
+
+    var fovySlider = document.getElementById("slider-fovy");
+    var fovyValue = document.getElementById("fovy-value");
+    fovySlider.addEventListener("input", function() {
+        fovyValue.innerHTML = fovySlider.value + "°";
+        fovy = parseFloat(fovySlider.value);
+    });
+
     render();
 };
 
@@ -319,20 +361,21 @@ function processVerticesPositions() {
     numGridLine = 0;
     for (var i = -boundX; i <= boundX; i++) {
         positions.push(
-            vec4(i, -boundY * 1.2, 0.0, 1.0),
-            vec4(i, boundX * 1.2, 0.0, 1.0)
+            vec4(i, -boundY * 1.5, 0.0, 1.0),
+            vec4(i, boundY * 1.5, 0.0, 1.0)
         );
         numGridLine += 2;
     }
 
-    for (var i = -boundY; i <= boundY; i++) {
+    for (var i = -boundY; i <= boundY + 4; i++) {
         positions.push(
-            vec4(-boundX * 1.2, i, 0.0, 1.0),
-            vec4(boundX * 1.2, i, 0.0, 1.0)
+            vec4(-boundX, i, 0.0, 1.0),
+            vec4(boundX, i, 0.0, 1.0)
         );
         numGridLine += 2;
     }
 
+    // Grid Z Vertices
     for (var i = -boundZ; i <= boundZ; i++) {
         positions.push(
             vec4(-boundX, -boundY, i, 1.0),
@@ -417,7 +460,7 @@ function render() {
         projectionMatrix = perspective(fovy, aspect, near, far);
         modelViewMatrixTranslate = mult(modelViewMatrix, translationMatrix);
     } else {
-        projectionMatrix = ortho(-aspect * 5, aspect * 5, -5, 5, -100, 100);
+        projectionMatrix = ortho(-aspect * 7.94, aspect * 7.94, -7.94, 7.94, -100, 100);
         modelViewMatrix = mat4();
         modelViewMatrixTranslate = translationMatrix;
     }
@@ -446,7 +489,11 @@ function render() {
 
     // Draw Object
     gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(modelViewMatrixTranslate));
-    gl.uniform4fv(uColor, vec4(0.0, 0.0, 0.0, 0.0));
+    if (shapeChoosen == "CIRCLE" || !isUsePerspective) {
+        gl.uniform4fv(uColor, color);
+    } else {
+        gl.uniform4fv(uColor, vec4(0.0, 0.0, 0.0, 0.0));
+    }
     gl.uniform1f(uThetaLoc, -1.0);
     gl.drawArrays(gl.TRIANGLES, 6 + numGridLine, numPositions);
 
@@ -456,8 +503,6 @@ function render() {
         gl.uniform1f(uThetaLoc, newTheta);
         gl.drawArrays(gl.LINES, 6 + numGridLine + numPositions, 2);
     }
-
-    // newTheta += 1.0;
 
     requestAnimationFrame(render);
 }
