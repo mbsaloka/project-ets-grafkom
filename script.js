@@ -235,7 +235,7 @@ function init()
 };
 
 function processVerticesPositions() {
-    var trajectoryTemp = positions.slice(numPositions + 2, positions.length);
+    var trajectoryTemp = positions.slice(6 + numGridLine + numPositions + 2, positions.length);
     positions = [];
 
     // Ground Vertices
