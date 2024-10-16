@@ -11,11 +11,35 @@ var numGridLine = 0;
 var shapeChoosen = "SQUARE";
 var objectSize = 0.2;
 
+var cubeVertices = [
+    vec4(-objectSize, -objectSize, objectSize, 1.0),
+    vec4(-objectSize, objectSize, objectSize, 1.0),
+    vec4(objectSize, objectSize, objectSize, 1.0),
+    vec4(objectSize, -objectSize, objectSize, 1.0),
+    vec4(-objectSize, -objectSize, -objectSize, 1.0),
+    vec4(-objectSize, objectSize, -objectSize, 1.0),
+    vec4(objectSize, objectSize, -objectSize, 1.0),
+    vec4(objectSize, -objectSize, -objectSize, 1.0),
+];
+
 var color = vec4(1.0, 0.0, 0.0, 1.0);
 var lineColor = vec4(0.0, 0.0, 1.0, 1.0);
 var trajectoryColor = vec4(0.0, 0.3, 0.3, 1.0);
 var gridColor = vec4(0.1, 0.1, 0.1, 0.5);
-var aColor;
+var groundColor = vec4(0.0, 0.8, 0.0, 0.8);
+var colorsArray = [];
+var uColor;
+
+var vertexColors = [
+    vec4(0.0, 0.0, 0.0, 1.0),  // black
+    vec4(1.0, 0.0, 0.0, 1.0),  // red
+    vec4(1.0, 1.0, 0.0, 1.0),  // yellow
+    vec4(0.0, 1.0, 0.0, 1.0),  // green
+    vec4(0.0, 0.0, 1.0, 1.0),  // blue
+    vec4(1.0, 0.0, 1.0, 1.0),  // magenta
+    vec4(0.0, 1.0, 1.0, 1.0),  // cyan
+    vec4(1.0, 1.0, 1.0, 1.0),  // white
+];
 
 var isDrawTrajectory = true;
 
@@ -66,23 +90,33 @@ function init()
 
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.8, 0.8, 0.8, 1.0);
+    gl.enable(gl.DEPTH_TEST);
 
     var ratio = canvas.width / canvas.height;
 
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
-    var vBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer );
     processVerticesPositions();
-    // gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+
+    var cBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW);
+
+    var colorLoc = gl.getAttribLocation(program, "aColor");
+    gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(colorLoc);
+
+    var vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 
     var positionLoc = gl.getAttribLocation(program, "aPosition");
     gl.vertexAttribPointer(positionLoc, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionLoc);
 
-    aColor = gl.getUniformLocation(program, "aColor");
-    gl.uniform4fv(aColor, color);
+    uColor = gl.getUniformLocation(program, "uColor");
+    gl.uniform4fv(uColor, color);
 
     uModelViewMatrix = gl.getUniformLocation(program, "uModelViewMatrix");
     uProjectionMatrix = gl.getUniformLocation(program, "uProjectionMatrix");
@@ -197,6 +231,7 @@ function init()
     shapeSelect.addEventListener("change", function() {
         shapeChoosen = shapeSelect.value;
         processVerticesPositions();
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
     });
 
     var colorSelect = document.getElementById("color-select");
@@ -228,7 +263,13 @@ function init()
     objectSizeSlider.addEventListener("input", function() {
         objectSizeValue.innerHTML = objectSizeSlider.value;
         objectSize = parseFloat(objectSizeSlider.value);
+        for (var v in cubeVertices) {
+            for (var i = 0; i < 3; i++) {
+                cubeVertices[v][i] = cubeVertices[v][i] > 0 ? objectSize : -objectSize;
+            }
+        }
         processVerticesPositions();
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
     });
 
     render();
@@ -266,18 +307,18 @@ function processVerticesPositions() {
         numGridLine += 2;
     }
 
+    colorsArray = new Array(6 + numGridLine).fill(vec4(0.0, 0.0, 0.0, 1.0));
+
     // Object Vertices
     switch (shapeChoosen) {
         case "SQUARE":
-            positions.push(
-                vec4(-objectSize, -objectSize,  0, 1.0),
-                vec4(-objectSize,  objectSize,  0, 1.0),
-                vec4(objectSize,  objectSize,  0, 1.0),
-                vec4(-objectSize, -objectSize,  0, 1.0),
-                vec4(objectSize, -objectSize,  0, 1.0),
-                vec4(objectSize,  objectSize,  0, 1.0)
-            )
-            numPositions = 6;
+            quad(1, 0, 3, 2);
+            quad(2, 3, 7, 6);
+            quad(3, 0, 4, 7);
+            quad(6, 5, 1, 2);
+            quad(4, 5, 6, 7);
+            quad(5, 4, 0, 1);
+            numPositions = 36;
             break;
         case "CIRCLE":
             var n = 50
@@ -304,10 +345,9 @@ function processVerticesPositions() {
         vec4(0.0, 0.0, 0, 1.0),
         vec4(objectSize + 2.0, 0.0, 0, 1.0)
     );
+    colorsArray.push(lineColor, lineColor);
 
     positions = positions.concat(trajectoryTemp);
-
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 }
 
 function render() {
@@ -325,21 +365,21 @@ function render() {
             break;
     }
 
-    // Draw Ground
-    gl.uniform4fv(aColor, gridColor);
+    // Draw Grid
+    gl.uniform4fv(uColor, gridColor);
     gl.uniform1f(uThetaLoc, -1.0);
     gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
     gl.drawArrays(gl.LINES, 6, numGridLine);
 
-    // Draw Object
-    gl.uniform4fv(aColor, vec4(0.0, 1.0, 0.1, 1.0));
+    // Draw Ground
+    gl.uniform4fv(uColor, vec4(0.0, 1.0, 0.1, 1.0));
     gl.uniform1f(uThetaLoc, -1.0);
     gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     // Draw Trajectory
     if (isDrawTrajectory) {
-        gl.uniform4fv(aColor, trajectoryColor);
+        gl.uniform4fv(uColor, trajectoryColor);
         gl.uniform1f(uThetaLoc, -1.0);
         gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
         gl.drawArrays(gl.LINES, 6 + numGridLine + numPositions + 2, numTrajectoryPoints);
@@ -348,16 +388,18 @@ function render() {
     // Draw Object
     var translationMatrix = translate(x, y, 0.0);
     gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(translationMatrix));
-    gl.uniform4fv(aColor, color);
-    gl.uniform1f(uThetaLoc, -1.0);
+    gl.uniform4fv(uColor, vec4(0.0, 0.0, 0.0, 0.0));
+    gl.uniform1f(uThetaLoc, newTheta);
     gl.drawArrays(gl.TRIANGLES, 6 + numGridLine, numPositions);
 
     // Draw Arrow
     if ((isUsingForce && velocityX == 0 && velocityY == 0)) {
-        gl.uniform4fv(aColor, lineColor);
+        gl.uniform4fv(uColor, lineColor);
         gl.uniform1f(uThetaLoc, newTheta);
         gl.drawArrays(gl.LINES, 6 + numGridLine + numPositions, 2);
     }
+
+    // newTheta += 1.0;
 
     requestAnimationFrame(render);
 }
@@ -469,4 +511,19 @@ function clearTrajectory() {
     numTrajectoryPoints = 0;
     positions = positions.slice(0, 6 + numGridLine + numPositions + 2);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+}
+
+function quad(a, b, c, d) {
+    positions.push(cubeVertices[a]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(cubeVertices[b]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(cubeVertices[c]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(cubeVertices[a]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(cubeVertices[c]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(cubeVertices[d]);
+    colorsArray.push(vertexColors[a]);
 }
