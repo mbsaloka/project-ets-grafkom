@@ -6,13 +6,15 @@ var colorLoc;
 var positions = [];
 var numPositions = 6;
 var numTrajectoryPoints = 0;
+var numGridLine = 0;
 
 var shapeChoosen = "SQUARE";
 var objectSize = 0.2;
 
 var color = vec4(1.0, 0.0, 0.0, 1.0);
 var lineColor = vec4(0.0, 0.0, 1.0, 1.0);
-var trajectoryColor = vec4(0.2, 0.2, 0.2, 1.0);
+var trajectoryColor = vec4(0.0, 0.3, 0.3, 1.0);
+var gridColor = vec4(0.1, 0.1, 0.1, 0.5);
 var aColor;
 
 var isDrawTrajectory = true;
@@ -73,7 +75,7 @@ function init()
     var vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer );
     processVerticesPositions();
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+    // gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 
     var positionLoc = gl.getAttribLocation(program, "aPosition");
     gl.vertexAttribPointer(positionLoc, 4, gl.FLOAT, false, 0, 0);
@@ -237,6 +239,20 @@ function init()
 function processVerticesPositions() {
     var trajectoryTemp = positions.slice(numPositions + 2, positions.length);
     positions = [];
+
+    numGridLine = 0;
+    for (var i = -boundX; i <= boundX; i++) {
+        positions.push(vec4(i, -boundY * 1.2, 0.0, 1.0));
+        positions.push(vec4(i, boundX * 1.2, 0.0, 1.0));
+        numGridLine += 2;
+    }
+
+    for (var i = -boundY; i <= boundY; i++) {
+        positions.push(vec4(-boundX * 1.2, i, 0.0, 1.0));
+        positions.push(vec4(boundX * 1.2, i, 0.0, 1.0));
+        numGridLine += 2;
+    }
+
     switch (shapeChoosen) {
         case "SQUARE":
             positions.push(
@@ -294,13 +310,16 @@ function render() {
             break;
     }
 
-    console.log(velocityX, velocityY);
+    gl.uniform4fv(aColor, vec4(0.1, 0.1, 0.1, 0.5));
+    gl.uniform1f(uThetaLoc, -1.0);
+    gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
+    gl.drawArrays(gl.LINES, 0, numGridLine);
 
     if (isDrawTrajectory) {
         gl.uniform4fv(aColor, trajectoryColor);
         gl.uniform1f(uThetaLoc, -1.0);
         gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(mat4()));
-        gl.drawArrays(gl.LINES, numPositions + 2, numTrajectoryPoints);
+        gl.drawArrays(gl.LINES, numGridLine + numPositions + 2, numTrajectoryPoints);
     }
 
     var translationMatrix = translate(x, y, 0.0);
@@ -308,12 +327,12 @@ function render() {
 
     gl.uniform4fv(aColor, color);
     gl.uniform1f(uThetaLoc, -1.0);
-    gl.drawArrays(gl.TRIANGLES, 0, numPositions);
+    gl.drawArrays(gl.TRIANGLES, numGridLine, numPositions);
 
     if ((isUsingForce && velocityX == 0 && velocityY == 0)) {
         gl.uniform4fv(aColor, lineColor);
         gl.uniform1f(uThetaLoc, newTheta);
-        gl.drawArrays(gl.LINES, numPositions, 2);
+        gl.drawArrays(gl.LINES, numGridLine + numPositions, 2);
     }
 
     requestAnimationFrame(render);
@@ -412,7 +431,6 @@ function updateSimulationParameters() {
         velocityX = newVelocityX;
         velocityY = newVelocityY;
     }
-
 }
 
 function drawTrajectory() {
@@ -425,6 +443,6 @@ function drawTrajectory() {
 
 function clearTrajectory() {
     numTrajectoryPoints = 0;
-    positions = positions.slice(0, numPositions + 2);
+    positions = positions.slice(0, numGridLine + numPositions + 2);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 }
