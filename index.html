@@ -108,7 +108,7 @@
 </head>
 
 <body>
-<canvas id="gl-canvas" width="1500" height="512"></canvas>
+<canvas id="gl-canvas" width="1536" height="512"></canvas>
 
 <div class="button-container">
     <button id="start-button">Start</button>
@@ -243,7 +243,6 @@ void main()
         );
     }
 
-    gl_PointSize = 20.0;
     gl_Position = uProjectionMatrix * uModelViewMatrix * rotationMatrix * aPosition;
     vColor = aColor;
 }

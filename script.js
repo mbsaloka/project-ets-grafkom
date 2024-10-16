@@ -31,8 +31,8 @@ var simulationState = "RESET";
 var deltaTime = 0.032;
 var gravity = -9.81;
 
-var boundX = 14.5;
-var boundY = 4.8;
+var boundX = 15;
+var boundY = 5;
 
 var velocityX = 0.0, newVelocityX = 0.0;
 var velocityY = 0.0, newVelocityY = 0.0;
@@ -229,8 +229,6 @@ function init()
         objectSizeValue.innerHTML = objectSizeSlider.value;
         objectSize = parseFloat(objectSizeSlider.value);
         processVerticesPositions();
-        boundX = 15 - objectSize * 1.2;
-        boundY = 5 - objectSize;
     });
 
     render();
@@ -367,8 +365,8 @@ function render() {
 function processSimulation() {
     var friction = mu * mass * -gravity;
 
-    if (y <= -boundY && velocityY <= 0) {
-        y = -boundY;
+    if (y <= -(boundY - objectSize) && velocityY <= 0) {
+        y = -(boundY - objectSize);
 
         if (velocityY < 0) {
             totalBounce++;
@@ -376,7 +374,7 @@ function processSimulation() {
             y += velocityY * deltaTime;
         }
 
-        if (y == -boundY && Math.abs(velocityY) < 0.1) {
+        if (y == -(boundY - objectSize) && Math.abs(velocityY) < 0.1) {
             velocityY = 0;
             totalBounce = 0;
         }
@@ -394,27 +392,27 @@ function processSimulation() {
                 velocityX = 0;
             }
         }
-    } else if (y > -boundY) {
+    } else if (y > -(boundY - objectSize)) {
         velocityY += gravity * deltaTime * Math.pow(bounceFactor, totalBounce);
         y += velocityY * deltaTime;
     }
 
-    if (y == -boundY && velocityY > 0) {
+    if (y == -(boundY - objectSize) && velocityY > 0) {
         velocityY += gravity * deltaTime * Math.pow(bounceFactor, totalBounce);
         y += velocityY * deltaTime;
     }
 
-    if (x < boundX && x > -boundX) {
+    if (x < (boundX - objectSize) && x > -(boundX - objectSize)) {
         x += velocityX * deltaTime;
     } else {
-        if (x >= boundX) {
-            x = boundX;
+        if (x >= (boundX - objectSize)) {
+            x = (boundX - objectSize);
             if (velocityX > 0) {
                 velocityX = -velocityX;
                 x += velocityX * deltaTime;
             }
-        } else if (x <= -boundX) {
-            x = -boundX;
+        } else if (x <= -(boundX - objectSize)) {
+            x = -(boundX - objectSize);
             if (velocityX < 0) {
                 velocityX = -velocityX;
                 x += velocityX * deltaTime;
