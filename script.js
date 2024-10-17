@@ -3,6 +3,11 @@
 var gl;
 var colorLoc;
 
+var program;
+var cBuffer;
+var vBuffer;
+var positionLoc;
+
 var positions = [];
 var numPositions = 6;
 var numTrajectoryPoints = 0;
@@ -22,6 +27,14 @@ var cubeVertices = [
     vec4(objectSize, -objectSize, -objectSize, 1.0),
 ];
 
+var limasVertices = [
+    vec4(-objectSize, -objectSize, objectSize, 1.0),
+    vec4(-objectSize, -objectSize, -objectSize, 1.0),
+    vec4(objectSize, -objectSize, -objectSize, 1.0),
+    vec4(objectSize, -objectSize, objectSize, 1.0),
+    vec4(0.0, objectSize, 0.0, 1.0)
+];
+
 var color = vec4(1.0, 0.0, 0.0, 1.0);
 var lineColor = vec4(0.0, 0.0, 1.0, 1.0);
 var trajectoryColor = vec4(0.0, 0.3, 0.3, 1.0);
@@ -39,6 +52,17 @@ var vertexColors = [
     vec4(1.0, 0.0, 1.0, 1.0),  // magenta
     vec4(0.0, 1.0, 1.0, 1.0),  // cyan
     vec4(1.0, 1.0, 1.0, 1.0),  // white
+];
+
+var vertexColorsBall = [
+    vec4(1.0, 0.5, 0.0, 1.0), // orange
+    vec4(1.0, 0.5, 0.0, 1.0), // orange
+    vec4(1.0, 0.5, 0.0, 1.0), // orange
+    vec4(1.0, 0.5, 0.0, 1.0), // orange
+    vec4(1.0, 0.0, 1.0, 1.0), // pink
+    vec4(1.0, 0.0, 1.0, 1.0), // pink
+    vec4(1.0, 0.0, 1.0, 1.0), // pink
+    vec4(1.0, 0.0, 1.0, 1.0) // pink
 ];
 
 var isDrawTrajectory = true;
@@ -112,24 +136,24 @@ function init()
 
     aspect = canvas.width / canvas.height;
 
-    var program = initShaders(gl, "vertex-shader", "fragment-shader");
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram(program);
 
     processVerticesPositions();
 
-    var cBuffer = gl.createBuffer();
+    cBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW);
 
-    var colorLoc = gl.getAttribLocation(program, "aColor");
+    colorLoc = gl.getAttribLocation(program, "aColor");
     gl.vertexAttribPointer(colorLoc, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(colorLoc);
 
-    var vBuffer = gl.createBuffer();
+    vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 
-    var positionLoc = gl.getAttribLocation(program, "aPosition");
+    positionLoc = gl.getAttribLocation(program, "aPosition");
     gl.vertexAttribPointer(positionLoc, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(positionLoc);
 
@@ -248,7 +272,7 @@ function init()
     shapeSelect.addEventListener("change", function() {
         shapeChoosen = shapeSelect.value;
         processVerticesPositions();
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+        setBufferData();
     });
 
     var colorSelect = document.getElementById("color-select");
@@ -286,7 +310,7 @@ function init()
             }
         }
         processVerticesPositions();
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+        setBufferData();
     });
 
     var nearSlider = document.getElementById("slider-near");
@@ -370,7 +394,7 @@ function init()
             resetPerspectiveButton.disabled = true;
         }
         processVerticesPositions();
-        gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
+        setBufferData();
     });
 
     render();
@@ -439,60 +463,77 @@ function processVerticesPositions() {
             numPositions = 36;
             break;
         case "CIRCLE":
-            // if (!isUsePerspective) {
-            var n = 50
-            var previousPos = vec4(objectSize, 0.0, 0.0, 1.0);
+            if (!isUsePerspective) {
+                var n = 50
+                var previousPos = vec4(objectSize, 0.0, 0.0, 1.0);
 
-            for (var i = 1; i <= n; i++) {
-                var angle = 2 * Math.PI * i / n;
-                var x = objectSize * Math.cos(angle);
-                var y = objectSize * Math.sin(angle);
-                var currentPos = vec4(x, y, 0.0, 1.0);
+                for (var i = 1; i <= n; i++) {
+                    var angle = 2 * Math.PI * i / n;
+                    var x = objectSize * Math.cos(angle);
+                    var y = objectSize * Math.sin(angle);
+                    var currentPos = vec4(x, y, 0.0, 1.0);
 
-                positions.push(previousPos);
-                positions.push(vec4(0.0, 0.0, 0.0, 1.0));
-                positions.push(currentPos);
+                    positions.push(previousPos);
+                    positions.push(vec4(0.0, 0.0, 0.0, 1.0));
+                    positions.push(currentPos);
 
-                previousPos = currentPos;
+                    previousPos = currentPos;
+                }
+                numPositions = n * 3;
+            } else {
+                var n = 50;
+                var m = 50;
+
+                var tempPositions = [];
+                for (var i = 0; i <= n; i++) {
+                    var theta = 2 * Math.PI * i / n;
+
+                    for (var j = 0; j <= m; j++) {
+                        var phi = Math.PI * j / m;
+
+                        var x = objectSize * Math.sin(phi) * Math.cos(theta);
+                        var y = objectSize * Math.sin(phi) * Math.sin(theta);
+                        var z = objectSize * Math.cos(phi);
+
+                        tempPositions.push(vec4(x, y, z, 1.0));
+                    }
+                }
+
+                for (var i = 0; i < n; i++) {
+
+                    for (var j = 0; j < m; j++) {
+                        var p1 = i * (m + 1) + j;
+                        var p2 = p1 + m + 1;
+
+                        positions.push(
+                            tempPositions[p1],
+                            tempPositions[p2],
+                            tempPositions[p1 + 1],
+                            tempPositions[p1 + 1],
+                            tempPositions[p2],
+                            tempPositions[p2 + 1]
+                        );
+                        colorsArray.push(
+                            vertexColorsBall[i % 8],
+                            vertexColorsBall[i % 8],
+                            vertexColorsBall[i % 8],
+                            vertexColorsBall[i % 8],
+                            vertexColorsBall[i % 8],
+                            vertexColorsBall[i % 8]
+                        );
+                        numPositions += 6;
+                    }
+                }
             }
-            numPositions = n * 3;
-            // } else {
-            //     var n = 50;
-            //     var m = 50;
-
-            //     var tempPositions = [];
-            //     for (var i = 0; i <= n; i++) {
-            //         var theta = 2 * Math.PI * i / n;
-
-            //         for (var j = 0; j <= m; j++) {
-            //             var phi = Math.PI * j / m;
-
-            //             var x = objectSize * Math.sin(phi) * Math.cos(theta);
-            //             var y = objectSize * Math.sin(phi) * Math.sin(theta);
-            //             var z = objectSize * Math.cos(phi);
-
-            //             tempPositions.push(vec4(x, y, z, 1.0));
-            //         }
-            //     }
-
-            //     for (var i = 0; i < n; i++) {
-            //         for (var j = 0; j < m; j++) {
-            //             var p1 = i * (m + 1) + j;
-            //             var p2 = p1 + m + 1;
-
-            //             positions.push(
-            //                 tempPositions[p1],
-            //                 tempPositions[p2],
-            //                 tempPositions[p1 + 1],
-            //                 tempPositions[p1 + 1],
-            //                 tempPositions[p2],
-            //                 tempPositions[p2 + 1]
-            //             );
-            //             numPositions += 6;
-            //         }
-            //     }
-            // }
             break;
+        case "LIMAS":
+            quad2(0, 1, 2, 3);
+            triangle(4, 0, 1);
+            triangle(1, 2, 4);
+            triangle(2, 3, 4);
+            triangle(3, 0, 4);
+
+            numPositions = 18;
     }
 
     // Arrow Vertices
@@ -559,7 +600,7 @@ function render() {
 
     // Draw Object
     gl.uniformMatrix4fv(uModelViewMatrix, false, flatten(modelViewMatrixTranslate));
-    if (shapeChoosen == "CIRCLE" || !isUsePerspective) {
+    if (!isUsePerspective) {
         gl.uniform4fv(uColor, color);
     } else {
         gl.uniform4fv(uColor, vec4(0.0, 0.0, 0.0, 0.0));
@@ -701,6 +742,30 @@ function quad(a, b, c, d) {
     colorsArray.push(vertexColors[a]);
 }
 
+function quad2(a, b, c, d) {
+    positions.push(limasVertices[a]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(limasVertices[b]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(limasVertices[c]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(limasVertices[a]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(limasVertices[c]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(limasVertices[d]);
+    colorsArray.push(vertexColors[a]);
+}
+
+function triangle(a, b, c) {
+    positions.push(limasVertices[a]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(limasVertices[b]);
+    colorsArray.push(vertexColors[a]);
+    positions.push(limasVertices[c]);
+    colorsArray.push(vertexColors[a]);
+}
+
 function resetPerspective() {
     near = 0.3;
     far = 30;
@@ -708,4 +773,11 @@ function resetPerspective() {
     thetaProjection = 0.0;
     phi = 0.0;
     fovy = 60.0;
+}
+
+function setBufferData() {
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
 }
