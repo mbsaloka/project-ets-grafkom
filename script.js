@@ -369,6 +369,8 @@ function init()
             fovySlider.disabled = true;
             resetPerspectiveButton.disabled = true;
         }
+        processVerticesPositions();
+        gl.bufferData(gl.ARRAY_BUFFER, flatten(positions), gl.STATIC_DRAW);
     });
 
     render();
@@ -437,22 +439,59 @@ function processVerticesPositions() {
             numPositions = 36;
             break;
         case "CIRCLE":
-            var n = 50
-            var previousPos = vec4(objectSize, 0.0, 0.0, 1.0);
+            if (!isUsePerspective) {
+                var n = 50
+                var previousPos = vec4(objectSize, 0.0, 0.0, 1.0);
 
-            for (var i = 1; i <= n; i++) {
-                var angle = 2 * Math.PI * i / n;
-                var x = objectSize * Math.cos(angle);
-                var y = objectSize * Math.sin(angle);
-                var currentPos = vec4(x, y, 0.0, 1.0);
+                for (var i = 1; i <= n; i++) {
+                    var angle = 2 * Math.PI * i / n;
+                    var x = objectSize * Math.cos(angle);
+                    var y = objectSize * Math.sin(angle);
+                    var currentPos = vec4(x, y, 0.0, 1.0);
 
-                positions.push(previousPos);
-                positions.push(vec4(0.0, 0.0, 0.0, 1.0));
-                positions.push(currentPos);
+                    positions.push(previousPos);
+                    positions.push(vec4(0.0, 0.0, 0.0, 1.0));
+                    positions.push(currentPos);
 
-                previousPos = currentPos;
+                    previousPos = currentPos;
+                }
+                numPositions = n * 3;
+            } else {
+                var n = 50;
+                var m = 50;
+
+                var tempPositions = [];
+                for (var i = 0; i <= n; i++) {
+                    var theta = 2 * Math.PI * i / n;
+
+                    for (var j = 0; j <= m; j++) {
+                        var phi = Math.PI * j / m;
+
+                        var x = objectSize * Math.sin(phi) * Math.cos(theta);
+                        var y = objectSize * Math.sin(phi) * Math.sin(theta);
+                        var z = objectSize * Math.cos(phi);
+
+                        tempPositions.push(vec4(x, y, z, 1.0));
+                    }
+                }
+
+                for (var i = 0; i < n; i++) {
+                    for (var j = 0; j < m; j++) {
+                        var p1 = i * (m + 1) + j;
+                        var p2 = p1 + m + 1;
+
+                        positions.push(
+                            tempPositions[p1],
+                            tempPositions[p2],
+                            tempPositions[p1 + 1],
+                            tempPositions[p1 + 1],
+                            tempPositions[p2],
+                            tempPositions[p2 + 1]
+                        );
+                        numPositions += 6;
+                    }
+                }
             }
-            numPositions = n * 3;
             break;
     }
 
