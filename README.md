@@ -1,6 +1,14 @@
-# COMPUTER GRAPHICS ETS PROJECT
-Physics simulation project using WebGL
+# Physics simulation project using WebGL
+> Web-based physics simulation using WebGL, featuring gravity, bouncy effects, friction, and more, allowing users to interact with and visualize dynamic physical environments in 2D and 3D perspectives.
 
+## Features
+- Simulation controls for start, stop, reset, and clear.
+- Customizable parameters i.e. velocity, force, mass, friction, and bounce factor.
+- Option to change object shape and color.
+- Switch perspective between 2D and 3D.
+- Display object trajectory.
+
+## Screenshot
 ![Screenshot from 2024-10-17 22-33-04](https://github.com/user-attachments/assets/f36cdef4-a306-46c0-8cf2-1bba5f5af4ab)
 ![Screenshot from 2024-10-17 22-35-23](https://github.com/user-attachments/assets/88377af0-7cac-45ed-94cf-c996ea1baf11)
 ![Screenshot from 2024-10-17 22-37-11](https://github.com/user-attachments/assets/2229f0e2-517d-47af-b2b7-09b48ef0c147)
